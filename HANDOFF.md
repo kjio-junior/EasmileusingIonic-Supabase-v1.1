@@ -1,9 +1,4 @@
-# EAsmile — Handoff Document (v1)
-
-## Project status
-EAsmile is a dental clinic web app built with **Ionic 8 + Angular 20 standalone** on the frontend and **Node.js + Express + Supabase** on the backend.
-
-
+#Handing off to anyone who can do the remaining external api's. the info needed is in the readme.md and the versions used are below:
 
 ##VERSIONS TO USE
 #node v22.23.2
