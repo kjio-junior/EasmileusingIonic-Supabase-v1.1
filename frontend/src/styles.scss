@@ -1,0 +1,194 @@
+@import '@ionic/angular/css/core.css';
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/padding.css';
+@import '@ionic/angular/css/display.css';
+@import '@ionic/angular/css/flex-utils.css';
+
+/* Force light theme — ignore OS dark mode */
+:root {
+  color-scheme: light;
+
+  /* Base Ionic palette — light mode values */
+  --ion-background-color: #ffffff;
+  --ion-background-color-rgb: 255,255,255;
+  --ion-text-color: #0A1E29;
+  --ion-text-color-rgb: 10,30,41;
+
+  /* Override dark mode at the source — ignore OS preference */
+  --ion-color-step-50:  #f2f4f7;
+  --ion-color-step-100: #e6eaee;
+  --ion-color-step-150: #d9dfe4;
+  --ion-color-step-200: #ccd4da;
+  --ion-color-step-250: #bfc9d0;
+  --ion-color-step-300: #b2bec6;
+  --ion-color-step-350: #a5b3bb;
+  --ion-color-step-400: #98a7b1;
+  --ion-color-step-450: #8b9ca6;
+  --ion-color-step-500: #7a8a97;
+  --ion-color-step-550: #6b7b87;
+  --ion-color-step-600: #5c6b77;
+  --ion-color-step-650: #4d5c68;
+  --ion-color-step-700: #3e4d59;
+  --ion-color-step-750: #2f3e4a;
+  --ion-color-step-800: #1f2e3a;
+  --ion-color-step-850: #142635;
+  --ion-color-step-900: #0A1E29;
+  --ion-color-step-950: #071620;
+
+  /* Custom brand colors */
+  --brand-primary:    #0A1E29;
+  --brand-secondary:  #6BC48A;
+  --brand-tertiary:   #4EBE7D;
+  --brand-sky:        #93D5ED;
+  --brand-light-bg:   #D2EEFC;
+}
+
+/* Prevent OS dark-mode from flipping anything */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light;
+    --ion-background-color: #ffffff;
+    --ion-background-color-rgb: 255,255,255;
+    --ion-text-color: #0A1E29;
+    --ion-text-color-rgb: 10,30,41;
+  }
+}
+
+/* ---------- FORM FIELD READABILITY ----------
+   Ionic inputs use their own color variables.
+   Without these, dark-mode OS users see white text on light backgrounds. */
+ion-input,
+ion-textarea,
+ion-select {
+  --color: #0A1E29;
+  --placeholder-color: #7a8a97;
+  --placeholder-opacity: 1;
+  color: #0A1E29;
+}
+
+ion-item {
+  --color: #0A1E29;
+  color: #0A1E29;
+}
+
+ion-label {
+  color: #4a6272;
+}
+
+/* Searchbar */
+ion-searchbar {
+  --color: #0A1E29;
+  --placeholder-color: #7a8a97;
+  --icon-color: #7a8a97;
+  --clear-button-color: #7a8a97;
+}
+
+/* ---------- DATETIME READABILITY ---------- */
+ion-datetime {
+  --background: #f2f8fc;
+  --background-rgb: 242,248,252;
+
+  /* Text colors */
+  color: #0A1E29;
+  --ion-color-base: #0A1E29;
+
+  /* The calendar needs its own overrides — Ionic ships white text by default in dark mode */
+  --ion-text-color: #0A1E29;
+  --ion-text-color-rgb: 10,30,41;
+}
+
+ion-datetime::part(calendar-day) {
+  color: #0A1E29;
+}
+
+ion-datetime::part(calendar-day active) {
+  color: #ffffff;
+  background: #0A1E29;
+}
+
+ion-datetime::part(calendar-day today) {
+  color: #4EBE7D;
+  font-weight: 700;
+}
+
+ion-datetime::part(calendar-day disabled) {
+  color: #b0bcc6;
+}
+
+ion-datetime::part(month-year-button) {
+  color: #0A1E29;
+}
+
+ion-datetime::part(calendar-days) {
+  color: #0A1E29;
+}
+
+/* ---------- IONIC SELECT / POPOVER / ALERT OVERRIDES ---------- */
+
+/* Popover (desktop select dropdown) */
+ion-popover {
+  --background: #ffffff;
+  --color: #0A1E29;
+  --box-shadow: 0 8px 24px rgba(10,30,41,0.15);
+}
+ion-popover ion-content {
+  --background: #ffffff;
+  --color: #0A1E29;
+}
+ion-popover ion-list {
+  background: #ffffff;
+  padding: 6px 0;
+}
+ion-popover ion-item {
+  --background: #ffffff;
+  --color: #0A1E29;
+  --padding-start: 16px;
+  font-size: 14px;
+}
+ion-popover ion-item:hover {
+  --background: #f2f8fc;
+}
+ion-popover ion-radio {
+  --color: #93D5ED;
+  --color-checked: #4EBE7D;
+}
+
+/* Alert (mobile select) */
+ion-alert {
+  --background: #ffffff;
+  --color: #0A1E29;
+}
+ion-alert .alert-wrapper {
+  background: #ffffff !important;
+  color: #0A1E29 !important;
+}
+ion-alert .alert-title {
+  color: #0A1E29 !important;
+  font-weight: 700 !important;
+}
+ion-alert .alert-message {
+  color: #4a6272 !important;
+}
+ion-alert .alert-radio-label {
+  color: #0A1E29 !important;
+  font-size: 14px !important;
+}
+ion-alert .alert-radio-icon {
+  border-color: #93D5ED !important;
+}
+ion-alert .alert-radio-inner {
+  background: #4EBE7D !important;
+}
+ion-alert [aria-checked="true"] .alert-radio-label {
+  color: #4EBE7D !important;
+  font-weight: 600 !important;
+}
+ion-alert .alert-button {
+  color: #0A1E29 !important;
+  font-weight: 600 !important;
+}
+ion-alert .alert-button.alert-button-role-cancel {
+  color: #7a8a97 !important;
+}
