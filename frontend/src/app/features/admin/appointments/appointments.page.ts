@@ -2,16 +2,17 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonContent, IonIcon, IonSpinner, IonSearchbar,
+  IonContent, IonIcon, IonSpinner,
   ToastController, AlertController
 } from '@ionic/angular/standalone';
 import { AdminApi, AdminAppointment } from '../../../core/admin-api.service';
+import { AdminAuthService } from '../../../core/admin-auth.service';
 
 @Component({
   standalone: true,
   selector: 'app-admin-appointments',
   host: { 'class': 'ion-page' },
-  imports: [CommonModule, FormsModule, IonContent, IonIcon, IonSpinner, IonSearchbar],
+  imports: [CommonModule, FormsModule, IonContent, IonIcon, IonSpinner],
   template: `
     <ion-content class="admin-bg">
       <div class="page-inner">
@@ -68,6 +69,11 @@ import { AdminApi, AdminAppointment } from '../../../core/admin-api.service';
                     @if (a.notes) {
                       <div class="appt-notes">"{{ a.notes }}"</div>
                     }
+                    @if (a.treatment_notes) {
+                      <div class="appt-notes treatment">
+                        <strong>Treatment:</strong> {{ a.treatment_notes }}
+                      </div>
+                    }
                   </div>
 
                   <div class="appt-right">
@@ -85,6 +91,15 @@ import { AdminApi, AdminAppointment } from '../../../core/admin-api.service';
                       [attr.data-variant]="s.variant"
                       (click)="changeStatus(a, s.value)">
                       {{ s.label }}
+                    </button>
+                  }
+                  @if (canEditNotes() && a.status === 'completed') {
+                    <button
+                      type="button"
+                      class="action-btn notes-btn"
+                      (click)="editNotes(a)">
+                      <ion-icon name="create-outline"></ion-icon>
+                      <span>{{ a.treatment_notes ? 'Edit notes' : 'Add treatment notes' }}</span>
                     </button>
                   }
                 </div>
@@ -171,6 +186,13 @@ import { AdminApi, AdminAppointment } from '../../../core/admin-api.service';
       margin-top: 8px; padding: 8px 12px;
       background: #f7fafc; border-radius: 10px;
     }
+    .appt-notes.treatment {
+      background: #f0f9f4;
+      border-left: 3px solid #4EBE7D;
+      font-style: normal;
+      color: #0A1E29;
+    }
+    .appt-notes.treatment strong { color: #1e6b3d; }
 
     .appt-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: 0 0 auto; }
     .status-chip {
@@ -203,6 +225,10 @@ import { AdminApi, AdminAppointment } from '../../../core/admin-api.service';
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .action-btn:hover { background: #f2f8fc; }
     .action-btn[data-variant="primary"] {
@@ -217,6 +243,13 @@ import { AdminApi, AdminAppointment } from '../../../core/admin-api.service';
       border-color: #ffd7d7; color: #c0392b;
     }
     .action-btn[data-variant="danger"]:hover { background: #ffe0e0; }
+
+    .notes-btn {
+      border-color: #4EBE7D;
+      color: #1e6b3d;
+    }
+    .notes-btn:hover { background: #f0f9f4; }
+    .notes-btn ion-icon { font-size: 14px; }
 
     .loading { display: grid; place-items: center; padding: 60px; }
     .empty { color: #7a8a97; font-size: 14px; text-align: center; padding: 40px; }
@@ -240,8 +273,14 @@ export class AdminAppointmentsPage implements OnInit {
     { label: 'Cancelled',   value: 'cancelled' }
   ];
 
+  canEditNotes = () => {
+    const role = this.adminAuth.user()?.role;
+    return role === 'admin' || role === 'dentist';
+  };
+
   constructor(
     private api: AdminApi,
+    private adminAuth: AdminAuthService,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController
   ) {}
@@ -317,6 +356,49 @@ export class AdminAppointmentsPage implements OnInit {
     } catch (e: any) {
       const t = await this.toastCtrl.create({
         message: e?.error?.error || 'Update failed', duration: 2000, position: 'bottom', color: 'danger'
+      });
+      await t.present();
+    }
+  }
+
+  async editNotes(a: AdminAppointment) {
+    const alert = await this.alertCtrl.create({
+      header: a.treatment_notes ? 'Edit treatment notes' : 'Add treatment notes',
+      subHeader: `${new Date(a.appointment_date).toLocaleDateString()} — ${a.patient?.first_name ?? ''} ${a.patient?.last_name ?? ''}`,
+      inputs: [
+        {
+          name: 'treatment_notes',
+          type: 'textarea',
+          placeholder: 'Describe the treatment performed, medications, follow-up...',
+          value: a.treatment_notes ?? '',
+          attributes: { rows: 5 }
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Save', role: 'confirm' }
+      ]
+    });
+
+    await alert.present();
+    const result = await alert.onDidDismiss();
+    if (result.role !== 'confirm' || !result.data) return;
+
+    const notes = (result.data.values?.treatment_notes ?? '').trim();
+
+    try {
+      const updated = await this.api.addTreatmentNotes(a.id, notes);
+      this.appointments.update(list =>
+        list.map(x => x.id === updated.id ? { ...x, treatment_notes: updated.treatment_notes } : x)
+      );
+      const t = await this.toastCtrl.create({
+        message: notes ? 'Treatment notes saved' : 'Treatment notes cleared',
+        duration: 1600, position: 'bottom', color: 'success'
+      });
+      await t.present();
+    } catch (e: any) {
+      const t = await this.toastCtrl.create({
+        message: e?.error?.error || 'Failed to save', duration: 2000, position: 'bottom', color: 'danger'
       });
       await t.present();
     }

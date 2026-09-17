@@ -101,7 +101,7 @@ import { AppointmentsApi, Appointment } from '../../../core/appointments.service
 
       <!-- Book appointment CTA -->
       <div class="cta-wrap">
-        <ion-button expand="block" class="cta" routerLink="/app/appointments/book">
+        <ion-button expand="block" class="cta" routerLink="/app/services">
           <ion-icon slot="start" name="calendar-outline"></ion-icon>
           Book an Appointment
         </ion-button>

@@ -4,8 +4,10 @@ async function myAppointments(req, res) {
   const { data, error } = await supabaseAdmin
     .from('appointments')
     .select(`
-      id, appointment_date, status, notes, total_amount, payment_status,
-      dentist:users!appointments_dentist_id_fkey ( id, first_name, last_name )
+      id, appointment_date, status, notes, treatment_notes,
+      total_amount, payment_status, created_at,
+      dentist:users!appointments_dentist_id_fkey ( id, first_name, last_name ),
+      items:appointment_items ( id, price, service:services ( id, name ) )
     `)
     .eq('patient_id', req.user.sub)
     .is('deleted_at', null)

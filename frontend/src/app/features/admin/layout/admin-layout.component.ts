@@ -1,8 +1,15 @@
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { IonRouterOutlet, IonIcon } from '@ionic/angular/standalone';
 import { AdminAuthService } from '../../../core/admin-auth.service';
+
+interface NavItem {
+  path: string;
+  icon: string;
+  label: string;
+  roles: string[];
+}
 
 @Component({
   standalone: true,
@@ -28,7 +35,7 @@ import { AdminAuthService } from '../../../core/admin-auth.service';
         <div class="sidebar-header">
           <div class="brand">
             <strong>EA<span class="accent">smile</span></strong>
-            <span>Admin</span>
+            <span>{{ roleLabel() }}</span>
           </div>
           <button class="close-button" type="button" (click)="closeSidebar()">
             <ion-icon name="close-outline"></ion-icon>
@@ -36,31 +43,16 @@ import { AdminAuthService } from '../../../core/admin-auth.service';
         </div>
 
         <nav class="nav">
-          <a class="nav-link" routerLink="/ea-admin/dashboard" routerLinkActive="active"
-             [routerLinkActiveOptions]="{ exact: true }" (click)="closeSidebar()">
-            <ion-icon name="grid-outline"></ion-icon>
-            <span>Dashboard</span>
-          </a>
-          <a class="nav-link" routerLink="/ea-admin/appointments" routerLinkActive="active" (click)="closeSidebar()">
-            <ion-icon name="calendar-outline"></ion-icon>
-            <span>Appointments</span>
-          </a>
-          <a class="nav-link" routerLink="/ea-admin/users" routerLinkActive="active" (click)="closeSidebar()">
-            <ion-icon name="people-outline"></ion-icon>
-            <span>Users</span>
-          </a>
-          <a class="nav-link" routerLink="/ea-admin/services" routerLinkActive="active" (click)="closeSidebar()">
-            <ion-icon name="construct-outline"></ion-icon>
-            <span>Services</span>
-          </a>
-          <a class="nav-link" routerLink="/ea-admin/reports" routerLinkActive="active" (click)="closeSidebar()">
-            <ion-icon name="stats-chart-outline"></ion-icon>
-            <span>Reports</span>
-          </a>
-          <a class="nav-link" routerLink="/ea-admin/settings" routerLinkActive="active" (click)="closeSidebar()">
-            <ion-icon name="settings-outline"></ion-icon>
-            <span>Settings</span>
-          </a>
+          @for (item of visibleNav(); track item.path) {
+            <a class="nav-link"
+               [routerLink]="item.path"
+               routerLinkActive="active"
+               [routerLinkActiveOptions]="{ exact: item.path === '/ea-admin/dashboard' }"
+               (click)="closeSidebar()">
+              <ion-icon [name]="item.icon"></ion-icon>
+              <span>{{ item.label }}</span>
+            </a>
+          }
         </nav>
 
         <div class="sidebar-bottom">
@@ -69,7 +61,7 @@ import { AdminAuthService } from '../../../core/admin-auth.service';
               <div class="avatar">{{ initials(u.first_name, u.last_name) }}</div>
               <div class="who-text">
                 <div class="who-name">{{ u.first_name }} {{ u.last_name }}</div>
-                <div class="who-role">Administrator</div>
+                <div class="who-role">{{ roleLabel() }}</div>
               </div>
             </div>
           }
@@ -88,7 +80,7 @@ import { AdminAuthService } from '../../../core/admin-auth.service';
           <button class="hamburger" type="button" (click)="toggleSidebar()">
             <ion-icon name="menu-outline"></ion-icon>
           </button>
-          <strong>EA<span class="accent">smile</span> Admin</strong>
+          <strong>EA<span class="accent">smile</span> {{ roleLabel() }}</strong>
         </header>
 
         <section class="page-container">
@@ -100,10 +92,7 @@ import { AdminAuthService } from '../../../core/admin-auth.service';
     </div>
   `,
   styles: [`
-    :host {
-      display: block;
-      height: 100%;
-    }
+    :host { display: block; height: 100%; }
 
     .admin-shell {
       display: flex;
@@ -141,12 +130,8 @@ import { AdminAuthService } from '../../../core/admin-auth.service';
 
     .close-button {
       display: flex;
-      border: 0;
-      background: transparent;
-      color: #ffffff;
-      font-size: 24px;
-      cursor: pointer;
-      padding: 4px;
+      border: 0; background: transparent;
+      color: #ffffff; font-size: 24px; cursor: pointer; padding: 4px;
     }
 
     /* NAV */
@@ -179,25 +164,15 @@ import { AdminAuthService } from '../../../core/admin-auth.service';
       padding: 16px;
       border-top: 1px solid rgba(255,255,255,0.08);
     }
-    .who {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
+    .who { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .avatar {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: #4EBE7D;
-      color: #ffffff;
-      display: grid;
-      place-items: center;
-      font-size: 13px;
-      font-weight: 700;
-      flex: 0 0 auto;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #4EBE7D; color: #ffffff;
+      display: grid; place-items: center;
+      font-size: 13px; font-weight: 700; flex: 0 0 auto;
     }
     .who-name { font-size: 13px; font-weight: 600; color: #ffffff; }
-    .who-role { font-size: 11px; color: #93D5ED; }
+    .who-role { font-size: 11px; color: #93D5ED; text-transform: capitalize; }
 
     .logout-button {
       width: 100%;
@@ -224,7 +199,6 @@ import { AdminAuthService } from '../../../core/admin-auth.service';
       display: flex;
       flex-direction: column;
     }
-
     .mobile-header {
       height: 60px;
       display: flex;
@@ -238,14 +212,10 @@ import { AdminAuthService } from '../../../core/admin-auth.service';
 
     .hamburger {
       display: flex;
-      align-items: center;
-      justify-content: center;
+      align-items: center; justify-content: center;
       width: 42px; height: 42px;
-      border: 0;
-      background: transparent;
-      color: #0A1E29;
-      font-size: 25px;
-      cursor: pointer;
+      border: 0; background: transparent;
+      color: #0A1E29; font-size: 25px; cursor: pointer;
     }
 
     .page-container {
@@ -254,14 +224,8 @@ import { AdminAuthService } from '../../../core/admin-auth.service';
       min-height: 0;
       position: relative;
     }
+    ion-router-outlet { display: block; width: 100%; height: 100%; }
 
-    ion-router-outlet {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-
-    /* OVERLAY */
     .sidebar-overlay {
       position: fixed;
       inset: 0;
@@ -281,6 +245,33 @@ import { AdminAuthService } from '../../../core/admin-auth.service';
 })
 export class AdminLayoutComponent {
   sidebarOpen = signal(false);
+
+  private navItems: NavItem[] = [
+    { path: '/ea-admin/dashboard',    icon: 'grid-outline',        label: 'Dashboard',    roles: ['admin', 'staff', 'dentist'] },
+    { path: '/ea-admin/appointments', icon: 'calendar-outline',    label: 'Appointments', roles: ['admin', 'staff', 'dentist'] },
+    { path: '/ea-admin/patients',     icon: 'person-outline',      label: 'Patients',     roles: ['admin', 'staff', 'dentist'] },
+    { path: '/ea-admin/users',        icon: 'people-outline',      label: 'Users',        roles: ['admin'] },
+    { path: '/ea-admin/services',     icon: 'construct-outline',   label: 'Services',     roles: ['admin', 'staff', 'dentist'] },
+    { path: '/ea-admin/reviews',      icon: 'star-outline',         label: 'Reviews',      roles: ['admin'] },
+    { path: '/ea-admin/inventory',    icon: 'cube-outline',        label: 'Inventory',    roles: ['admin', 'staff'] },
+    { path: '/ea-admin/reports',      icon: 'stats-chart-outline', label: 'Reports',      roles: ['admin'] },
+    { path: '/ea-admin/settings',     icon: 'settings-outline',    label: 'Settings',     roles: ['admin'] },
+    { path: '/ea-admin/audit',        icon: 'document-text-outline', label: 'Audit Trail', roles: ['admin'] }
+  ];
+
+  visibleNav = computed(() => {
+    const role = this.auth.user()?.role;
+    if (!role) return [];
+    return this.navItems.filter(item => item.roles.includes(role));
+  });
+
+  roleLabel = computed(() => {
+    const role = this.auth.user()?.role;
+    if (role === 'admin')   return 'Admin';
+    if (role === 'dentist') return 'Dentist';
+    if (role === 'staff')   return 'Staff';
+    return '';
+  });
 
   constructor(public auth: AdminAuthService, private router: Router) {}
 

@@ -43,9 +43,13 @@ export const routes: Routes = [
       // Placeholders for other pages — all point at dashboard until we build them
       { path: 'appointments', loadComponent: () => import('./features/admin/appointments/appointments.page').then(m => m.AdminAppointmentsPage) },
       { path: 'users', loadComponent: () => import('./features/admin/users/users.page').then(m => m.AdminUsersPage) },
+      { path: 'patients', loadComponent: () => import('./features/admin/patients/patients.page').then(m => m.AdminPatientsPage) },
       { path: 'services', loadComponent: () => import('./features/admin/services/services.page').then(m => m.AdminServicesPage) },
+      { path: 'inventory', loadComponent: () => import('./features/admin/inventory/inventory.page').then(m => m.AdminInventoryPage) },
       { path: 'reports', loadComponent: () => import('./features/admin/reports/reports.page').then(m => m.AdminReportsPage) },
-      { path: 'settings', loadComponent: () => import('./features/admin/settings/settings.page').then(m => m.AdminSettingsPage) }
+      { path: 'settings', loadComponent: () => import('./features/admin/settings/settings.page').then(m => m.AdminSettingsPage) },
+      { path: 'audit', loadComponent: () => import('./features/admin/audit/audit.page').then(m => m.AdminAuditPage) },
+      { path: 'reviews', loadComponent: () => import('./features/admin/reviews/reviews.page').then(m => m.AdminReviewsPage) }
     ]
   },
   {

@@ -192,3 +192,30 @@ ion-alert .alert-button {
 ion-alert .alert-button.alert-button-role-cancel {
   color: #7a8a97 !important;
 }
+
+/* Alert text inputs — make the textarea readable */
+ion-alert .alert-input,
+ion-alert textarea.alert-input,
+ion-alert input.alert-input {
+  color: #0A1E29 !important;
+  background: #f2f8fc !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+  border: 1px solid #e6eef5 !important;
+  font-size: 14px !important;
+  font-family: inherit !important;
+  caret-color: #0A1E29 !important;
+}
+
+ion-alert .alert-input::placeholder,
+ion-alert textarea.alert-input::placeholder,
+ion-alert input.alert-input::placeholder {
+  color: #b0bcc6 !important;
+  opacity: 1 !important;
+}
+
+ion-alert .alert-input:focus,
+ion-alert textarea.alert-input:focus {
+  border-color: #4EBE7D !important;
+  background: #ffffff !important;
+}

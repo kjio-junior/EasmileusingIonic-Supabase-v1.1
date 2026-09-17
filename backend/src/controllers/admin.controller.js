@@ -1,4 +1,5 @@
 const { supabaseAdmin } = require('../config/supabase');
+const { logAudit } = require('../utils/audit');
 
 async function dashboard(req, res) {
   const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
@@ -125,6 +126,13 @@ async function updateUser(req, res) {
     return res.status(500).json({ error: 'Server error' });
   }
 
+  await logAudit({
+    action: 'user.update',
+    entity: 'user',
+    entity_id: id,
+    changes: patch
+  }, req);
+
   res.json({ user: data });
 }
 
@@ -186,6 +194,12 @@ async function updateAppointmentStatus(req, res) {
     console.error('admin.updateAppointmentStatus error', error);
     return res.status(500).json({ error: 'Server error' });
   }
+  await logAudit({
+    action: 'appointment.status_change',
+    entity: 'appointment',
+    entity_id: id,
+    changes: { new_status: status }
+  }, req);
   res.json({ appointment: data });
 }
 
@@ -251,6 +265,12 @@ async function createService(req, res) {
     console.error('admin.createService error', error);
     return res.status(500).json({ error: 'Server error' });
   }
+  await logAudit({
+    action: 'service.create',
+    entity: 'service',
+    entity_id: data.id,
+    changes: { name: data.name, price: data.price }
+  }, req);
   res.status(201).json({ service: data });
 }
 
@@ -282,6 +302,12 @@ async function updateService(req, res) {
     console.error('admin.updateService error', error);
     return res.status(500).json({ error: 'Server error' });
   }
+  await logAudit({
+    action: 'service.update',
+    entity: 'service',
+    entity_id: id,
+    changes: patch
+  }, req);
   res.json({ service: data });
 }
 
@@ -293,6 +319,12 @@ async function deleteService(req, res) {
     console.error('admin.deleteService error', error);
     return res.status(500).json({ error: 'Server error' });
   }
+  await logAudit({
+    action: 'service.delete',
+    entity: 'service',
+    entity_id: id,
+    changes: { soft_deleted: true }
+  }, req);
   res.json({ ok: true });
 }
 
@@ -405,6 +437,12 @@ async function upsertSetting(req, res) {
     console.error('admin.upsertSetting error', error);
     return res.status(500).json({ error: 'Server error' });
   }
+  await logAudit({
+    action: 'setting.update',
+    entity: 'setting',
+    entity_id: data.id,
+    changes: { key: data.key, value: data.value }
+  }, req);
   res.json({ setting: data });
 }
 
@@ -459,7 +497,186 @@ async function createUser(req, res) {
     return res.status(500).json({ error: 'Server error' });
   }
 
+  await logAudit({
+    action: 'user.create',
+    entity: 'user',
+    entity_id: user.id,
+    changes: { role: user.role, email: user.email }
+  }, req);
+
   res.status(201).json({ user });
+}
+
+// ===== PATIENTS =====
+
+async function listPatients(req, res) {
+  const { q } = req.query;
+
+  let query = supabaseAdmin
+    .from('users')
+    .select('id, first_name, last_name, email, phone, address, profile_image, is_active, created_at, last_login_at')
+    .eq('role', 'patient')
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false });
+
+  if (q) {
+    const term = `%${q}%`;
+    query = query.or(`first_name.ilike.${term},last_name.ilike.${term},email.ilike.${term},phone.ilike.${term}`);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    console.error('admin.listPatients error', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+  res.json({ patients: data || [] });
+}
+
+async function getPatient(req, res) {
+  const { id } = req.params;
+
+  const { data: patient, error } = await supabaseAdmin
+    .from('users')
+    .select('id, first_name, last_name, email, phone, address, profile_image, is_active, created_at, last_login_at')
+    .eq('id', id)
+    .eq('role', 'patient')
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (error) {
+    console.error('admin.getPatient error', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+  if (!patient) return res.status(404).json({ error: 'Patient not found' });
+
+  const [totalRes, completedRes, upcomingRes] = await Promise.all([
+    supabaseAdmin.from('appointments').select('*', { count: 'exact', head: true }).eq('patient_id', id).is('deleted_at', null),
+    supabaseAdmin.from('appointments').select('*', { count: 'exact', head: true }).eq('patient_id', id).eq('status', 'completed').is('deleted_at', null),
+    supabaseAdmin.from('appointments').select('*', { count: 'exact', head: true }).eq('patient_id', id).in('status', ['pending', 'confirmed', 'in-progress']).is('deleted_at', null)
+  ]);
+
+  res.json({
+    patient,
+    summary: {
+      total: totalRes.count || 0,
+      completed: completedRes.count || 0,
+      upcoming: upcomingRes.count || 0
+    }
+  });
+}
+
+async function getPatientHistory(req, res) {
+  const { id } = req.params;
+
+  const { data, error } = await supabaseAdmin
+    .from('appointments')
+    .select(`
+      id, appointment_date, status, notes, treatment_notes,
+      total_amount, payment_status, created_at,
+      dentist:users!appointments_dentist_id_fkey ( id, first_name, last_name ),
+      items:appointment_items ( id, price, service:services ( id, name ) )
+    `)
+    .eq('patient_id', id)
+    .is('deleted_at', null)
+    .order('appointment_date', { ascending: false });
+
+  if (error) {
+    console.error('admin.getPatientHistory error', error);
+    return res.status(500).json({ error: 'Server error', detail: error.message });
+  }
+  res.json({ history: data || [] });
+}
+
+async function addTreatmentNotes(req, res) {
+  const { id } = req.params;
+  const { treatment_notes } = req.body || {};
+
+  if (typeof treatment_notes !== 'string') {
+    return res.status(400).json({ error: 'treatment_notes must be a string' });
+  }
+
+  const { data: appt, error: fetchErr } = await supabaseAdmin
+    .from('appointments')
+    .select('id, status')
+    .eq('id', id)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (fetchErr) {
+    console.error('admin.addTreatmentNotes fetch error', fetchErr);
+    return res.status(500).json({ error: 'Server error' });
+  }
+  if (!appt) return res.status(404).json({ error: 'Appointment not found' });
+
+  if (appt.status !== 'completed') {
+    return res.status(400).json({ error: 'Treatment notes can only be added to completed appointments' });
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('appointments')
+    .update({ treatment_notes: treatment_notes.trim() || null, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select(`
+      id, appointment_date, status, notes, treatment_notes,
+      dentist:users!appointments_dentist_id_fkey ( id, first_name, last_name ),
+      items:appointment_items ( id, price, service:services ( id, name ) )
+    `)
+    .single();
+
+  if (error) {
+    console.error('admin.addTreatmentNotes update error', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+  await logAudit({
+    action: 'appointment.treatment_notes',
+    entity: 'appointment',
+    entity_id: id,
+    changes: { has_notes: !!treatment_notes.trim() }
+  }, req);
+  res.json({ appointment: data });
+}
+
+async function listAuditLogs(req, res) {
+  const { entity, action, user_id, limit } = req.query;
+
+  let query = supabaseAdmin
+    .from('audit_logs')
+    .select(`
+      id, action, entity, entity_id, changes,
+      ip_address, user_agent, created_at, user_id
+    `)
+    .order('created_at', { ascending: false })
+    .limit(Math.min(Number(limit) || 200, 500));
+
+  if (entity) query = query.eq('entity', entity);
+  if (action) query = query.eq('action', action);
+  if (user_id) query = query.eq('user_id', user_id);
+
+  const { data, error } = await query;
+  if (error) {
+    console.error('admin.listAuditLogs error', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+
+  // Fetch user info separately (avoid FK alias dependency)
+  const userIds = [...new Set((data || []).map(l => l.user_id).filter(Boolean))];
+  let usersMap = {};
+
+  if (userIds.length) {
+    const { data: users } = await supabaseAdmin
+      .from('users')
+      .select('id, first_name, last_name, email, role')
+      .in('id', userIds);
+
+    usersMap = Object.fromEntries((users || []).map(u => [u.id, u]));
+  }
+
+  const logs = (data || []).map(l => ({
+    ...l,
+    user: l.user_id ? (usersMap[l.user_id] || null) : null
+  }));
+
+  res.json({ logs });
 }
 
 module.exports = {
@@ -469,11 +686,16 @@ module.exports = {
   createUser,
   listAppointments,
   updateAppointmentStatus,
+  addTreatmentNotes,
+  listPatients,
+  getPatient,
+  getPatientHistory,
   listServices,
   createService,
   updateService,
   deleteService,
   reportsSummary,
   listSettings,
-  upsertSetting
+  upsertSetting,
+  listAuditLogs
 };

@@ -3,14 +3,23 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface AppointmentItem {
+  id: string;
+  price: number;
+  service: { id: string; name: string } | null;
+}
+
 export interface Appointment {
   id: string;
   appointment_date: string;
-  status: 'pending'|'confirmed'|'in-progress'|'completed'|'cancelled'|'no-show';
+  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show';
   notes: string | null;
+  treatment_notes: string | null;
   total_amount: number;
   payment_status: string;
+  created_at: string;
   dentist: { id: string; first_name: string; last_name: string } | null;
+  items: AppointmentItem[];
 }
 
 @Injectable({ providedIn: 'root' })

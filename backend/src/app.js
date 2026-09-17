@@ -8,6 +8,7 @@ const appointmentsRoutes = require('./routes/appointments.routes');
 const adminRoutes = require('./routes/admin.routes');
 const pdfRoutes = require('./routes/pdf.routes');
 const documentsRoutes = require('./routes/documents.routes');
+const reviewsRoutes = require('./routes/reviews.routes');
 
 const app = express();
 app.use(cors());
@@ -20,6 +21,7 @@ app.use('/api/appointments', appointmentsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', pdfRoutes);
 app.use('/api/documents', documentsRoutes);
+app.use('/api/reviews', reviewsRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 app.use((err, req, res, next) => {

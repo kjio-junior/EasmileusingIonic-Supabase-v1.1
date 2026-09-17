@@ -122,8 +122,9 @@ async function adminLogin(req, res) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
-  if (user.role !== 'admin') {
-    return res.status(403).json({ error: 'Not an administrator account' });
+  const portalRoles = ['admin', 'dentist', 'staff'];
+  if (!portalRoles.includes(user.role)) {
+    return res.status(403).json({ error: 'Not a staff or administrator account' });
   }
 
   const ok = await bcrypt.compare(password, user.password_hash);

@@ -19,7 +19,7 @@ import {
   banOutline, createOutline, addOutline, trashOutline, closeOutline,
   trendingUpOutline, arrowDownOutline, arrowBackOutline, arrowForwardOutline, lockClosedOutline,
   flagOutline, mailOutline, callOutline,
-  locationOutline, logoInstagram
+  locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline
 } from 'ionicons/icons';
 import { AuthService } from './core/auth.service';
 
@@ -97,7 +97,7 @@ export class App {
       banOutline, createOutline, addOutline, trashOutline, closeOutline,
       trendingUpOutline, arrowDownOutline, arrowBackOutline, arrowForwardOutline, lockClosedOutline,
       flagOutline, mailOutline, callOutline,
-      locationOutline, logoInstagram
+      locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline
     });
   }
 
