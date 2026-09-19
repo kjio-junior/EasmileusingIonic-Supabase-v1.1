@@ -1,5 +1,6 @@
 const { supabaseAdmin } = require('../config/supabase');
 const { logAudit } = require('../utils/audit');
+const { notify } = require('../utils/notify');
 
 async function dashboard(req, res) {
   const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
@@ -200,6 +201,19 @@ async function updateAppointmentStatus(req, res) {
     entity_id: id,
     changes: { new_status: status }
   }, req);
+
+  // Notify the patient
+  if (data.patient?.id) {
+    const statusLabel = status.replace('-', ' ');
+    await notify({
+      userId: data.patient.id,
+      type: 'status',
+      title: `Appointment ${statusLabel}`,
+      message: `Your appointment on ${new Date(data.appointment_date).toLocaleString('en-PH')} is now ${statusLabel}.`,
+      link: '/app/appointments'
+    });
+  }
+
   res.json({ appointment: data });
 }
 
@@ -633,6 +647,24 @@ async function addTreatmentNotes(req, res) {
     entity_id: id,
     changes: { has_notes: !!treatment_notes.trim() }
   }, req);
+
+  // Notify the patient
+  const { data: apptPatient } = await supabaseAdmin
+    .from('appointments')
+    .select('patient_id, appointment_date')
+    .eq('id', id)
+    .single();
+
+  if (apptPatient?.patient_id) {
+    await notify({
+      userId: apptPatient.patient_id,
+      type: 'treatment',
+      title: 'Treatment notes added',
+      message: `Your dentist added notes to your appointment on ${new Date(apptPatient.appointment_date).toLocaleDateString('en-PH')}.`,
+      link: '/app/appointments'
+    });
+  }
+
   res.json({ appointment: data });
 }
 

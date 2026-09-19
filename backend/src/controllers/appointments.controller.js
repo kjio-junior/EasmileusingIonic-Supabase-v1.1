@@ -1,4 +1,5 @@
 const { supabaseAdmin } = require('../config/supabase');
+const { notify, notifyClinic } = require('../utils/notify');
 
 async function myAppointments(req, res) {
   const { data, error } = await supabaseAdmin
@@ -60,6 +61,23 @@ async function book(req, res) {
     console.error('appointments.book fetch error', fetchErr);
     return res.status(500).json({ error: 'Server error' });
   }
+
+  // Patient gets a confirmation
+  await notify({
+    userId: req.user.sub,
+    type: 'booking',
+    title: 'Booking received',
+    message: `Your appointment for ${new Date(appt.appointment_date).toLocaleString('en-PH')} is pending confirmation.`,
+    link: '/app/appointments'
+  });
+
+  // Admins, staff, and dentists get a heads-up
+  await notifyClinic({
+    type: 'booking',
+    title: 'New booking',
+    message: `A new appointment was booked for ${new Date(appt.appointment_date).toLocaleString('en-PH')}.`,
+    link: '/ea-admin/appointments'
+  });
 
   res.status(201).json({ appointment: appt });
 }

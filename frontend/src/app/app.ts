@@ -8,6 +8,8 @@ import { addIcons } from 'ionicons';
 import {
   // customer tabs + menu
   homeOutline, gridOutline, calendarOutline, personOutline,
+  heartOutline, heart, helpCircleOutline,
+  chevronUpOutline, chevronDownOutline, sendOutline,
   personCircleOutline, happyOutline, searchOutline, chevronForwardOutline,
   logOutOutline, informationCircleOutline, settingsOutline, menuOutline,
   // services
@@ -19,7 +21,8 @@ import {
   banOutline, createOutline, addOutline, trashOutline, closeOutline,
   trendingUpOutline, arrowDownOutline, arrowBackOutline, arrowForwardOutline, lockClosedOutline,
   flagOutline, mailOutline, callOutline,
-  locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline
+  locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline,
+  imagesOutline, linkOutline, notificationsOutline, notificationsOffOutline, pricetagOutline, chatbubbleOutline
 } from 'ionicons/icons';
 import { AuthService } from './core/auth.service';
 
@@ -49,6 +52,10 @@ import { AuthService } from './core/auth.service';
                 <ion-icon slot="start" name="grid-outline"></ion-icon>
                 <ion-label>Services</ion-label>
               </ion-item>
+              <ion-item routerLink="/app/wishlist" routerLinkActive="menu-active" detail="false">
+                <ion-icon slot="start" name="heart-outline"></ion-icon>
+                <ion-label>My Wishlist</ion-label>
+              </ion-item>
               <ion-item routerLink="/app/appointments" routerLinkActive="menu-active" detail="false">
                 <ion-icon slot="start" name="calendar-outline"></ion-icon>
                 <ion-label>My Appointments</ion-label>
@@ -56,6 +63,10 @@ import { AuthService } from './core/auth.service';
               <ion-item routerLink="/app/profile" routerLinkActive="menu-active" detail="false">
                 <ion-icon slot="start" name="person-outline"></ion-icon>
                 <ion-label>My Profile</ion-label>
+              </ion-item>
+              <ion-item routerLink="/app/contact" routerLinkActive="menu-active" detail="false">
+                <ion-icon slot="start" name="help-circle-outline"></ion-icon>
+                <ion-label>Help &amp; Support</ion-label>
               </ion-item>
               <ion-item (click)="logout()" detail="false" button>
                 <ion-icon slot="start" name="log-out-outline"></ion-icon>
@@ -82,10 +93,15 @@ import { AuthService } from './core/auth.service';
   `]
 })
 export class App {
-  constructor(public auth: AuthService, private router: Router) {
+  constructor(
+    public auth: AuthService,
+    private router: Router
+  ) {
     addIcons({
       // customer
       homeOutline, gridOutline, calendarOutline, personOutline,
+      heartOutline, heart, helpCircleOutline,
+      chevronUpOutline, chevronDownOutline, sendOutline,
       personCircleOutline, happyOutline, searchOutline, chevronForwardOutline,
       logOutOutline, informationCircleOutline, settingsOutline, menuOutline,
       // services
@@ -97,8 +113,10 @@ export class App {
       banOutline, createOutline, addOutline, trashOutline, closeOutline,
       trendingUpOutline, arrowDownOutline, arrowBackOutline, arrowForwardOutline, lockClosedOutline,
       flagOutline, mailOutline, callOutline,
-      locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline
+      locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline,
+      imagesOutline, linkOutline, notificationsOutline, notificationsOffOutline, pricetagOutline, chatbubbleOutline
     });
+
   }
 
   logout() {

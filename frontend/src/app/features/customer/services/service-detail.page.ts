@@ -10,6 +10,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Service } from '../../../core/services.service';
 import { ReviewsApi, Review, ReviewSummary } from '../../../core/reviews.service';
+import { WishlistStore } from '../../../core/wishlist.store';
 
 @Component({
   standalone: true,
@@ -34,6 +35,13 @@ import { ReviewsApi, Review, ReviewSummary } from '../../../core/reviews.service
         <div class="loading"><ion-spinner name="crescent"></ion-spinner></div>
       } @else if (service(); as s) {
         <section class="hero">
+          <button
+            type="button"
+            class="hero-heart"
+            [class.active]="wishlist.has(s.id)"
+            (click)="toggleWishlist(s.id)">
+            <ion-icon [name]="wishlist.has(s.id) ? 'heart' : 'heart-outline'"></ion-icon>
+          </button>
           <div class="hero-icon">
             <ion-icon [name]="iconFor(s.category)"></ion-icon>
           </div>
@@ -152,9 +160,28 @@ import { ReviewsApi, Review, ReviewSummary } from '../../../core/reviews.service
     .bg { --background: #ffffff; }
 
     .hero {
+      position: relative;
       background: #e6f4fb; padding: 28px 20px;
       text-align: center; border-radius: 0 0 24px 24px;
     }
+    .hero-heart {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 0;
+      background: #ffffff;
+      color: #7a8a97;
+      display: grid; place-items: center;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(10,30,41,0.08);
+    }
+    .hero-heart:hover { transform: scale(1.1); }
+    .hero-heart.active { color: #e74c6b; }
     .hero-icon {
       width: 64px; height: 64px; border-radius: 50%;
       background: #ffffff; color: #4EBE7D;
@@ -276,7 +303,8 @@ export class ServiceDetailPage implements OnInit {
     private router: Router,
     private http: HttpClient,
     private reviewsApi: ReviewsApi,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    public wishlist: WishlistStore
   ) {}
 
   async ngOnInit() {
@@ -299,7 +327,12 @@ export class ServiceDetailPage implements OnInit {
       this.service.set(null);
     } finally {
       this.loading.set(false);
+      if (!this.wishlist.loaded()) this.wishlist.load();
     }
+  }
+
+  async toggleWishlist(id: string) {
+    await this.wishlist.toggle(id);
   }
 
   iconFor(category: string): string {

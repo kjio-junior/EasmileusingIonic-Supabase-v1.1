@@ -70,8 +70,8 @@ import { AuthService } from '../../core/auth.service';
 
             <div class="grid-2">
               <div class="field-group">
-                <label class="field-label">First name</label>
-                <ion-item lines="none" class="field">
+                <label class="field-label">First name <span class="req">*</span></label>
+                <ion-item lines="none" class="field" [class.invalid]="submitted() && !first_name.trim()">
                   <ion-input
                     type="text"
                     placeholder="Jane"
@@ -83,8 +83,8 @@ import { AuthService } from '../../core/auth.service';
               </div>
 
               <div class="field-group">
-                <label class="field-label">Last name</label>
-                <ion-item lines="none" class="field">
+                <label class="field-label">Last name <span class="req">*</span></label>
+                <ion-item lines="none" class="field" [class.invalid]="submitted() && !last_name.trim()">
                   <ion-input
                     type="text"
                     placeholder="Doe"
@@ -97,8 +97,8 @@ import { AuthService } from '../../core/auth.service';
             </div>
 
             <div class="field-group">
-              <label class="field-label">Email</label>
-              <ion-item lines="none" class="field">
+              <label class="field-label">Email <span class="req">*</span></label>
+              <ion-item lines="none" class="field" [class.invalid]="submitted() && !email.trim()">
                 <ion-icon slot="start" name="mail-outline" class="field-icon"></ion-icon>
                 <ion-input
                   type="email"
@@ -111,8 +111,8 @@ import { AuthService } from '../../core/auth.service';
             </div>
 
             <div class="field-group">
-              <label class="field-label">Phone</label>
-              <ion-item lines="none" class="field">
+              <label class="field-label">Phone <span class="req">*</span></label>
+              <ion-item lines="none" class="field" [class.invalid]="submitted() && !phone.trim()">
                 <ion-icon slot="start" name="call-outline" class="field-icon"></ion-icon>
                 <ion-input
                   type="tel"
@@ -125,8 +125,8 @@ import { AuthService } from '../../core/auth.service';
             </div>
 
             <div class="field-group">
-              <label class="field-label">Password</label>
-              <ion-item lines="none" class="field">
+              <label class="field-label">Password <span class="req">*</span></label>
+              <ion-item lines="none" class="field" [class.invalid]="submitted() && password.length < 6">
                 <ion-icon slot="start" name="lock-closed-outline" class="field-icon"></ion-icon>
                 <ion-input
                   [type]="showPassword ? 'text' : 'password'"
@@ -352,6 +352,25 @@ import { AuthService } from '../../core/auth.service';
       border-color: #4EBE7D;
       --background: #ffffff;
     }
+    .req {
+      color: #e74c3c;
+      font-weight: 700;
+      margin-left: 2px;
+    }
+
+    .field.invalid {
+      --background: #fff5f5;
+      border-color: #e74c3c !important;
+      box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.14);
+      animation: fieldShake 0.35s ease;
+    }
+    .field.invalid .field-icon { color: #e74c3c; }
+
+    @keyframes fieldShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
     .field-icon {
       color: #7a8a97;
       font-size: 18px;
@@ -466,6 +485,7 @@ export class RegisterPage {
   showPassword = false;
   loading = signal(false);
   error = signal<string | null>(null);
+  submitted = signal(false);
 
   constructor(private auth: AuthService, private router: Router) {}
 
@@ -474,6 +494,7 @@ export class RegisterPage {
   }
 
   async submit() {
+    this.submitted.set(true);
     this.error.set(null);
 
     if (!this.first_name.trim() || !this.last_name.trim()) {

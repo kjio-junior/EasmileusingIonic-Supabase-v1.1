@@ -48,6 +48,8 @@ export const routes: Routes = [
       { path: 'inventory', loadComponent: () => import('./features/admin/inventory/inventory.page').then(m => m.AdminInventoryPage) },
       { path: 'reports', loadComponent: () => import('./features/admin/reports/reports.page').then(m => m.AdminReportsPage) },
       { path: 'settings', loadComponent: () => import('./features/admin/settings/settings.page').then(m => m.AdminSettingsPage) },
+      { path: 'banners', loadComponent: () => import('./features/admin/banners/banners.page').then(m => m.AdminBannersPage) },
+      { path: 'faqs', loadComponent: () => import('./features/admin/faqs/faqs.page').then(m => m.AdminFaqsPage) },
       { path: 'audit', loadComponent: () => import('./features/admin/audit/audit.page').then(m => m.AdminAuditPage) },
       { path: 'reviews', loadComponent: () => import('./features/admin/reviews/reviews.page').then(m => m.AdminReviewsPage) }
     ]
@@ -63,8 +65,11 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'home', pathMatch: 'full' },
       { path: 'home', loadComponent: () => import('./features/customer/home/home.page').then(m => m.HomePage) },
+      { path: 'contact', loadComponent: () => import('./features/customer/contact/contact.page').then(m => m.ContactPage) },
+      { path: 'notifications', loadComponent: () => import('./features/customer/notifications/notifications.page').then(m => m.NotificationsPage) },
       // Placeholders — we'll build these next
       { path: 'services', loadComponent: () => import('./features/customer/services/services-list.page').then(m => m.ServicesListPage) },
+      { path: 'wishlist', loadComponent: () => import('./features/customer/wishlist/wishlist.page').then(m => m.WishlistPage) },
       { path: 'services/:id', loadComponent: () => import('./features/customer/services/service-detail.page').then(m => m.ServiceDetailPage) },
       { path: 'book/:serviceId', loadComponent: () => import('./features/customer/booking/book.page').then(m => m.BookPage) },
       { path: 'appointments', loadComponent: () => import('./features/customer/appointments/appointments-list.page').then(m => m.AppointmentsListPage) },

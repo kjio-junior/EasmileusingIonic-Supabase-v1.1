@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { Banner } from './banners.service';
+import { Faq } from './faqs.service';
 
 export interface AdminUser {
   id: string;
@@ -246,6 +248,58 @@ export class AdminApi {
   deleteReview(id: string): Promise<void> {
     return firstValueFrom(
       this.http.delete<{ ok: boolean }>(`${environment.apiUrl}/admin/reviews/${id}`)
+    ).then(() => undefined);
+  }
+
+  // ---------- BANNERS ----------
+
+  listBanners(): Promise<Banner[]> {
+    return firstValueFrom(
+      this.http.get<{ banners: Banner[] }>(`${environment.apiUrl}/admin/banners`)
+    ).then(r => r.banners);
+  }
+
+  createBanner(payload: Partial<Banner>): Promise<Banner> {
+    return firstValueFrom(
+      this.http.post<{ banner: Banner }>(`${environment.apiUrl}/admin/banners`, payload)
+    ).then(r => r.banner);
+  }
+
+  updateBanner(id: string, patch: Partial<Banner>): Promise<Banner> {
+    return firstValueFrom(
+      this.http.put<{ banner: Banner }>(`${environment.apiUrl}/admin/banners/${id}`, patch)
+    ).then(r => r.banner);
+  }
+
+  deleteBanner(id: string): Promise<void> {
+    return firstValueFrom(
+      this.http.delete<{ ok: boolean }>(`${environment.apiUrl}/admin/banners/${id}`)
+    ).then(() => undefined);
+  }
+
+  // ---------- FAQS ----------
+
+  listFaqs(): Promise<Faq[]> {
+    return firstValueFrom(
+      this.http.get<{ faqs: Faq[] }>(`${environment.apiUrl}/admin/faqs`)
+    ).then(r => r.faqs);
+  }
+
+  createFaq(payload: Partial<Faq>): Promise<Faq> {
+    return firstValueFrom(
+      this.http.post<{ faq: Faq }>(`${environment.apiUrl}/admin/faqs`, payload)
+    ).then(r => r.faq);
+  }
+
+  updateFaq(id: string, patch: Partial<Faq>): Promise<Faq> {
+    return firstValueFrom(
+      this.http.put<{ faq: Faq }>(`${environment.apiUrl}/admin/faqs/${id}`, patch)
+    ).then(r => r.faq);
+  }
+
+  deleteFaq(id: string): Promise<void> {
+    return firstValueFrom(
+      this.http.delete<{ ok: boolean }>(`${environment.apiUrl}/admin/faqs/${id}`)
     ).then(() => undefined);
   }
 

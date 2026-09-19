@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import {
   IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel
 } from '@ionic/angular/standalone';
+import { NotificationBellComponent } from './notification-bell.component';
 
 @Component({
   standalone: true,
   selector: 'app-customer-tabs',
-  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
+  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, NotificationBellComponent],
   template: `
     <ion-tabs>
       <ion-tab-bar slot="bottom" class="custom-tabbar">
@@ -28,6 +29,8 @@ import {
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
+
+    <app-notification-bell></app-notification-bell>
   `,
   styles: [`
     .custom-tabbar {

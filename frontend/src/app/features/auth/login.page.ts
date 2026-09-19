@@ -69,8 +69,8 @@ import { AuthService } from '../../core/auth.service';
             <p class="sub">Use your EAsmile account to continue.</p>
 
             <div class="field-group">
-              <label class="field-label">Email</label>
-              <ion-item lines="none" class="field">
+              <label class="field-label">Email <span class="req">*</span></label>
+              <ion-item lines="none" class="field" [class.invalid]="submitted() && !email.trim()">
                 <ion-icon slot="start" name="mail-outline" class="field-icon"></ion-icon>
                 <ion-input
                   type="email"
@@ -83,8 +83,8 @@ import { AuthService } from '../../core/auth.service';
             </div>
 
             <div class="field-group">
-              <label class="field-label">Password</label>
-              <ion-item lines="none" class="field">
+              <label class="field-label">Password <span class="req">*</span></label>
+              <ion-item lines="none" class="field" [class.invalid]="submitted() && !password">
                 <ion-icon slot="start" name="lock-closed-outline" class="field-icon"></ion-icon>
                 <ion-input
                   [type]="showPassword ? 'text' : 'password'"
@@ -321,6 +321,26 @@ import { AuthService } from '../../core/auth.service';
       font-size: 15px;
     }
 
+    .req {
+      color: #e74c3c;
+      font-weight: 700;
+      margin-left: 2px;
+    }
+
+    .field.invalid {
+      --background: #fff5f5;
+      border-color: #e74c3c !important;
+      box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.14);
+      animation: fieldShake 0.35s ease;
+    }
+    .field.invalid .field-icon { color: #e74c3c; }
+
+    @keyframes fieldShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
     .eye-btn {
       --color: #7a8a97;
       --padding-start: 6px;
@@ -420,6 +440,7 @@ export class LoginPage {
   showPassword = false;
   loading = signal(false);
   error = signal<string | null>(null);
+  submitted = signal(false);
 
   constructor(private auth: AuthService, private router: Router) {}
 
@@ -428,15 +449,20 @@ export class LoginPage {
   }
 
   async submit() {
+    this.submitted.set(true);
     this.error.set(null);
-    if (!this.email || !this.password) {
+    if (!this.email.trim() || !this.password) {
       this.error.set('Enter email and password');
       return;
     }
     this.loading.set(true);
     try {
       await this.auth.login(this.email.trim(), this.password);
-      this.router.navigateByUrl('/app/home', { replaceUrl: true });
+
+      const returnUrl = sessionStorage.getItem('returnUrl');
+      sessionStorage.removeItem('returnUrl');
+
+      this.router.navigateByUrl(returnUrl || '/app/home', { replaceUrl: true });
     } catch (e: any) {
       const msg = e?.error?.error || e?.message || 'Login failed';
       this.error.set(msg);

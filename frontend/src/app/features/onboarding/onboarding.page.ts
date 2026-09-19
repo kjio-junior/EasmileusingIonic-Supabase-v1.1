@@ -1,6 +1,8 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { BannersApi, Banner } from '../../core/banners.service';
+import { ChatWidgetComponent } from '../../shared/chatbot/chat-widget.component';
 import {
   IonContent, IonButton, IonIcon
 } from '@ionic/angular/standalone';
@@ -8,7 +10,7 @@ import {
 @Component({
   standalone: true,
   selector: 'app-onboarding',
-  imports: [CommonModule, IonContent, IonButton, IonIcon],
+  imports: [CommonModule, RouterLink, IonContent, IonButton, IonIcon, ChatWidgetComponent],
   template: `
     <!-- ================= FLOATING TOP BAR (outside ion-content) ================= -->
     <div class="top-bar" [class.scrolled]="scrolled()" [class.hidden]="hidden()">
@@ -25,11 +27,11 @@ import {
 
       <!-- ================= HERO ================= -->
       <section class="hero">
-        @for (img of heroSlides; track $index) {
+        @for (b of heroBanners(); track b.id) {
           <div
             class="hero-photo"
             [class.active]="$index === activeSlide()"
-            [style.background-image]="'url(' + img + ')'">
+            [style.background-image]="'url(' + b.image_url + ')'">
           </div>
         }
         <div class="hero-overlay"></div>
@@ -38,15 +40,29 @@ import {
           <div class="brand-badge">
             <span class="badge-ea">EA</span><span class="badge-smile">smile</span>
           </div>
-          <h1 class="hero-title">Take Care of<br/>Your Smile</h1>
-          <p class="hero-sub">Find the dental care you need and discover services that help you maintain a healthy, confident smile.</p>
-          <ion-button class="hero-cta" (click)="scrollToStory()">
-            Discover More
-            <ion-icon slot="end" name="arrow-down-outline"></ion-icon>
-          </ion-button>
+          @if (activeBanner(); as b) {
+            <h1 class="hero-title">
+              {{ b.title }}@if (b.subtitle) {<br/>}{{ b.subtitle }}
+            </h1>
+            @if (b.description) {
+              <p class="hero-sub">{{ b.description }}</p>
+            }
+
+            @if (b.link_url) {
+              <ion-button class="hero-cta" [routerLink]="b.link_url">
+                {{ b.button_text || 'Learn More' }}
+                <ion-icon slot="end" name="arrow-forward-outline"></ion-icon>
+              </ion-button>
+            } @else {
+              <ion-button class="hero-cta" (click)="scrollToStory()">
+                {{ b.button_text || 'Discover More' }}
+                <ion-icon slot="end" name="arrow-down-outline"></ion-icon>
+              </ion-button>
+            }
+          }
 
           <div class="dots">
-            @for (img of heroSlides; track $index) {
+            @for (b of heroBanners(); track b.id) {
               <button
                 type="button"
                 class="dot"
@@ -187,6 +203,8 @@ import {
       </section>
 
     </ion-content>
+
+    <app-chat-widget></app-chat-widget>
   `,
   styles: [`
     :host {
@@ -658,15 +676,43 @@ import {
   `]
 })
 export class OnboardingPage implements OnInit, OnDestroy {
-  heroSlides = [
-    'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=1600&q=80',
-    'https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=1600&q=80',
-    'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=1600&q=80',
-    'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=1600&q=80'
+  private readonly FALLBACK_BANNERS: Banner[] = [
+    {
+      id: 'fallback-1', title: 'Take Care of', subtitle: 'Your Smile',
+      description: 'Find the dental care you need and discover services that help you maintain a healthy, confident smile.',
+      image_url: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=1600&q=80', link_url: null,
+      button_text: 'Discover More', position: 'hero', order: 0, is_active: true, start_date: null, end_date: null, created_at: '', updated_at: ''
+    },
+    {
+      id: 'fallback-2', title: 'Find the Right', subtitle: 'Care for You',
+      description: 'Browse available dental services, learn what each treatment offers, and choose the care that fits your needs.',
+      image_url: 'https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=1600&q=80', link_url: null,
+      button_text: 'Get Started', position: 'hero', order: 1, is_active: true, start_date: null, end_date: null, created_at: '', updated_at: ''
+    },
+    {
+      id: 'fallback-3', title: 'Your Smile,', subtitle: 'Our Priority',
+      description: 'Trusted professionals, modern equipment, and a team that cares about your comfort.',
+      image_url: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=1600&q=80', link_url: null,
+      button_text: 'Discover More', position: 'hero', order: 2, is_active: true, start_date: null, end_date: null, created_at: '', updated_at: ''
+    },
+    {
+      id: 'fallback-4', title: 'Book With', subtitle: 'Ease',
+      description: 'Find a slot, confirm, and get reminded — all in a few taps.',
+      image_url: 'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=1600&q=80', link_url: null,
+      button_text: 'Book Now', position: 'hero', order: 3, is_active: true, start_date: null, end_date: null, created_at: '', updated_at: ''
+    }
   ];
+
+  heroBanners = signal<Banner[]>(this.FALLBACK_BANNERS);
+  activeBanner = computed(() => {
+    const list = this.heroBanners();
+    if (!list.length) return null;
+    return list[this.activeSlide() % list.length];
+  });
 
   activeSlide = signal(0);
   scrolled = signal(false);
+  private slidesLoaded = false;
   hidden = signal(false);
   private slideTimer?: any;
   private lastScrollY = 0;
@@ -688,12 +734,26 @@ export class OnboardingPage implements OnInit, OnDestroy {
     { name: 'Roxas, Ardee P.',      role: 'Frontend Designer / Dev', photo: 'https://ui-avatars.com/api/?name=Ardee+Roxas&background=F89B67&color=ffffff&bold=true&size=200' }
   ];
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private bannersApi: BannersApi) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     this.slideTimer = setInterval(() => {
-      this.activeSlide.update(i => (i + 1) % this.heroSlides.length);
+      this.activeSlide.update(i => (i + 1) % this.heroBanners().length);
     }, 5000);
+
+    try {
+      const banners = await this.bannersApi.listActive('hero');
+      if (banners.length) {
+        this.heroBanners.set(banners);
+        this.activeSlide.set(0);
+        clearInterval(this.slideTimer);
+        this.slideTimer = setInterval(() => {
+          this.activeSlide.update(i => (i + 1) % this.heroBanners().length);
+        }, 5000);
+      }
+    } catch {
+      // keep fallback
+    }
   }
 
   onContentScroll(ev: CustomEvent) {
@@ -717,10 +777,9 @@ export class OnboardingPage implements OnInit, OnDestroy {
 
   goToSlide(index: number) {
     this.activeSlide.set(index);
-    // Reset the timer so the user's click gets a full 5 seconds
     clearInterval(this.slideTimer);
     this.slideTimer = setInterval(() => {
-      this.activeSlide.update(i => (i + 1) % this.heroSlides.length);
+      this.activeSlide.update(i => (i + 1) % this.heroBanners().length);
     }, 5000);
   }
 
