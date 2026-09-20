@@ -282,7 +282,7 @@ export class BookPage implements OnInit {
     this.error.set(null);
     this.submitting.set(true);
     try {
-      await this.apptsApi.book({
+      const created = await this.apptsApi.book({
         service_id: this.service()!.id,
         appointment_date: this.selectedSlot!,
         notes: this.notes.trim() || undefined
@@ -292,7 +292,7 @@ export class BookPage implements OnInit {
         duration: 1800, position: 'bottom', color: 'success'
       });
       await t.present();
-      this.router.navigateByUrl('/app/appointments', { replaceUrl: true });
+      this.router.navigateByUrl(`/app/checkout/${created.id}`, { replaceUrl: true });
     } catch (e: any) {
       this.error.set(e?.error?.error || e?.message || 'Booking failed');
     } finally {

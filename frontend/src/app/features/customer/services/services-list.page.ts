@@ -274,7 +274,8 @@ export class ServicesListPage implements OnInit {
   constructor(public servicesApi: ServicesApi, public wishlist: WishlistStore) {}
 
   async ngOnInit() {
-    if (!this.servicesApi.services().length) await this.servicesApi.load();
+    // Always refresh on entry — the shared cache may be stale
+    await this.servicesApi.load();
     if (!this.wishlist.loaded()) await this.wishlist.load();
   }
 

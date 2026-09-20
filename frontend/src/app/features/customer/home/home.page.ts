@@ -81,15 +81,17 @@ import { AppointmentsApi, Appointment } from '../../../core/appointments.service
           <div class="service-grid">
             @for (s of filtered(); track s.id) {
               <a class="service-card" [routerLink]="['/app/services', s.id]" (click)="onCardClick($event)">
-                <div class="icon-circle">
-                  <ion-icon [name]="iconFor(s.category)"></ion-icon>
-                </div>
-                <h3 class="service-name">{{ s.name }}</h3>
-                <p class="service-desc">{{ s.description }}</p>
-                <div class="service-foot">
-                  <span class="price">From ₱{{ s.price }}</span>
-                  <span class="chev"><ion-icon name="chevron-forward-outline"></ion-icon></span>
-                </div>
+                  <div class="card-img" [style.background-image]="'url(' + imageFor(s) + ')'">
+                    <div class="img-overlay"></div>
+                  </div>
+                  <div class="card-body">
+                    <h3 class="service-name">{{ s.name }}</h3>
+                    <p class="service-desc">{{ s.description }}</p>
+                    <div class="service-foot">
+                      <span class="price">From ₱{{ s.price }}</span>
+                      <span class="duration">{{ s.duration_minutes }} min</span>
+                    </div>
+                  </div>
               </a>
             }
             @if (!filtered().length && !servicesApi.loading()) {
@@ -151,32 +153,50 @@ import { AppointmentsApi, Appointment } from '../../../core/appointments.service
     .section-title { font-size: 15px; font-weight: 600; color: #0A1E29; margin: 4px 0 12px; }
 
     .service-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
     }
     .service-card {
-      display: flex; flex-direction: column;
-      background: #e6f4fb; border-radius: 16px;
-      padding: 14px; text-decoration: none; color: inherit;
-      position: relative; min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      border-radius: 18px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid #e6eef5;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .icon-circle {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: #ffffff; color: #4EBE7D;
-      display: grid; place-items: center; font-size: 20px;
-      margin-bottom: 8px;
+    .service-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(10,30,41,0.08);
     }
-    .service-name { font-size: 14px; font-weight: 700; margin: 0 0 4px; color: #0A1E29; }
+    .card-img {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background-size: cover;
+      background-position: center;
+      background-color: #e6f4fb;
+    }
+    .img-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(10,30,41,0.35) 100%);
+    }
+    .card-body { padding: 14px 16px 16px; }
+    .service-name { font-size: 15px; font-weight: 700; margin: 0 0 4px; color: #0A1E29; }
     .service-desc {
-      font-size: 11px; color: #4a6272; margin: 0 0 10px; line-height: 1.3;
-      flex: 1;
+      font-size: 12.5px; color: #4a6272; margin: 0 0 12px; line-height: 1.45;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
     }
-    .service-foot { display: flex; align-items: center; justify-content: space-between; }
-    .price { font-size: 11px; color: #0A1E29; font-weight: 600; }
-    .chev {
-      width: 22px; height: 22px; border-radius: 50%;
-      background: #ffffff; display: grid; place-items: center;
-      font-size: 12px; color: #4EBE7D;
+    .service-foot {
+      display: flex; align-items: baseline; justify-content: space-between;
+      padding-top: 10px; border-top: 1px solid #eef3f8;
     }
+    .price { font-size: 15px; font-weight: 700; color: #0A1E29; }
+    .duration { font-size: 11px; color: #7a8a97; }
 
     .loading { display: grid; place-items: center; padding: 24px; }
     .empty { color: #7a8a97; font-size: 13px; grid-column: span 2; text-align: center; }
@@ -240,6 +260,18 @@ export class HomePage implements OnInit {
       case 'surgical':    return 'medical-outline';
       case 'diagnostic':  return 'eye-outline';
       default:            return 'ellipsis-horizontal-outline';
+    }
+  }
+
+  imageFor(s: Service): string {
+    if (s.image_url) return s.image_url;
+    switch (s.category) {
+      case 'preventive':  return 'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=600&q=80';
+      case 'restorative': return 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=600&q=80';
+      case 'cosmetic':    return 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=600&q=80';
+      case 'surgical':    return 'https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=600&q=80';
+      case 'diagnostic':  return 'https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=600&q=80';
+      default:            return 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=600&q=80';
     }
   }
 

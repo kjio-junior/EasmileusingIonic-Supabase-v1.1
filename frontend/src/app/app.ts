@@ -20,7 +20,7 @@ import {
   timeOutline, alertCircleOutline, checkmarkCircleOutline, closeCircleOutline,
   banOutline, createOutline, addOutline, trashOutline, closeOutline,
   trendingUpOutline, arrowDownOutline, arrowBackOutline, arrowForwardOutline, lockClosedOutline,
-  lockOpenOutline, keyOutline,
+  lockOpenOutline, keyOutline, cardOutline, checkmark,
   flagOutline, mailOutline, callOutline,
   locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline,
   imagesOutline, linkOutline, notificationsOutline, notificationsOffOutline, pricetagOutline, chatbubbleOutline
@@ -116,7 +116,7 @@ export class App {
       timeOutline, alertCircleOutline, checkmarkCircleOutline, closeCircleOutline,
       banOutline, createOutline, addOutline, trashOutline, closeOutline,
       trendingUpOutline, arrowDownOutline, arrowBackOutline, arrowForwardOutline, lockClosedOutline,
-      lockOpenOutline, keyOutline,
+      lockOpenOutline, keyOutline, cardOutline, checkmark,
       flagOutline, mailOutline, callOutline,
       locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline,
       imagesOutline, linkOutline, notificationsOutline, notificationsOffOutline, pricetagOutline, chatbubbleOutline

@@ -109,4 +109,127 @@ async function busySlots(req, res) {
   res.json({ busy });
 }
 
-module.exports = { myAppointments, book, busySlots };
+async function payAppointment(req, res) {
+  const { id } = req.params;
+  const { card_number, card_name, expiry, cvc } = req.body || {};
+
+  if (!card_number || !card_name || !expiry || !cvc) {
+    return res.status(400).json({ error: 'All card fields are required' });
+  }
+
+  // Superficial validation — this is a simulation, not a real charge
+  const digits = String(card_number).replace(/\s+/g, '');
+  if (!/^\d{13,19}$/.test(digits)) {
+    return res.status(400).json({ error: 'Invalid card number' });
+  }
+  if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+    return res.status(400).json({ error: 'Expiry must be in MM/YY format' });
+  }
+  const [mm] = expiry.split('/').map(Number);
+  if (mm < 1 || mm > 12) {
+    return res.status(400).json({ error: 'Invalid expiry month' });
+  }
+  if (!/^\d{3,4}$/.test(cvc)) {
+    return res.status(400).json({ error: 'Invalid CVC' });
+  }
+
+  // Load appointment and verify ownership
+  const { data: appt, error: fetchErr } = await supabaseAdmin
+    .from('appointments')
+    .select('id, patient_id, total_amount, payment_status, appointment_date, deleted_at')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (fetchErr) {
+    console.error('payAppointment fetch error', fetchErr);
+    return res.status(500).json({ error: 'Server error' });
+  }
+  if (!appt || appt.deleted_at) {
+    return res.status(404).json({ error: 'Appointment not found' });
+  }
+  if (appt.patient_id !== req.user.sub) {
+    return res.status(403).json({ error: 'You can only pay for your own appointments' });
+  }
+  if (appt.payment_status === 'paid') {
+    return res.status(400).json({ error: 'This appointment is already paid' });
+  }
+
+  await new Promise(r => setTimeout(r, 900));
+
+  const txId =
+    'TXN-' +
+    Date.now().toString(36).toUpperCase() +
+    '-' +
+    Math.random().toString(36).slice(2, 6).toUpperCase();
+
+  const { data: updated, error: updateErr } = await supabaseAdmin
+    .from('appointments')
+    .update({
+      payment_status: 'paid',
+      payment_method: 'card',
+      transaction_id: txId,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .select(`
+      id, appointment_date, status, notes, treatment_notes,
+      total_amount, payment_status, payment_method, transaction_id,
+      patient:users!appointments_patient_id_fkey ( id, first_name, last_name, email ),
+      items:appointment_items ( id, price, service:services ( id, name ) )
+    `)
+    .single();
+
+  if (updateErr) {
+    console.error('payAppointment update error', updateErr);
+    return res.status(500).json({ error: 'Server error' });
+  }
+
+  await notify({
+    userId: req.user.sub,
+    type: 'status',
+    title: 'Payment received',
+    message: `We received your payment of ₱${Number(appt.total_amount).toFixed(2)}. Transaction ID: ${txId}.`,
+    link: '/app/appointments'
+  });
+
+  await notifyClinic({
+    type: 'status',
+    title: 'Payment received',
+    message: `A patient paid ₱${Number(appt.total_amount).toFixed(2)} for an appointment on ${new Date(appt.appointment_date).toLocaleString('en-PH')}.`,
+    link: '/ea-admin/appointments'
+  });
+
+  res.json({ appointment: updated, transaction_id: txId });
+}
+
+async function getOne(req, res) {
+  const { id } = req.params;
+
+  const { data, error } = await supabaseAdmin
+    .from('appointments')
+    .select(`
+      id, appointment_date, status, notes, treatment_notes,
+      total_amount, payment_status, payment_method, transaction_id,
+      patient:users!appointments_patient_id_fkey ( id, first_name, last_name, email, phone ),
+      dentist:users!appointments_dentist_id_fkey ( id, first_name, last_name ),
+      items:appointment_items ( id, price, service:services ( id, name ) )
+    `)
+    .eq('id', id)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (error) {
+    console.error('getOne error', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+  if (!data) return res.status(404).json({ error: 'Appointment not found' });
+
+  // Patients can only see their own
+  if (req.user.role === 'patient' && req.user.sub !== data.patient?.id) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  res.json({ appointment: data });
+}
+
+module.exports = { myAppointments, book, busySlots, payAppointment, getOne };

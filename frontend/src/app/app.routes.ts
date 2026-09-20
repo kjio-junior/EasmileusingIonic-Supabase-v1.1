@@ -81,6 +81,8 @@ export const routes: Routes = [
       { path: 'wishlist', loadComponent: () => import('./features/customer/wishlist/wishlist.page').then(m => m.WishlistPage) },
       { path: 'services/:id', loadComponent: () => import('./features/customer/services/service-detail.page').then(m => m.ServiceDetailPage) },
       { path: 'book/:serviceId', loadComponent: () => import('./features/customer/booking/book.page').then(m => m.BookPage) },
+      { path: 'checkout/:id', loadComponent: () => import('./features/customer/checkout/checkout.page').then(m => m.CheckoutPage) },
+      { path: 'thank-you', loadComponent: () => import('./features/customer/thank-you/thank-you.page').then(m => m.ThankYouPage) },
       { path: 'appointments', loadComponent: () => import('./features/customer/appointments/appointments-list.page').then(m => m.AppointmentsListPage) },
       { path: 'profile', loadComponent: () => import('./features/customer/profile/profile.page').then(m => m.ProfilePage) }
     ]

@@ -122,6 +122,22 @@ import { ReviewsApi, Review } from '../../../core/reviews.service';
                 </div>
               }
 
+              @if (tab() === 'upcoming' && a.payment_status === 'unpaid') {
+                <div class="pay-cta">
+                  <a class="pay-btn" [routerLink]="['/app/checkout', a.id]">
+                    <ion-icon name="card-outline"></ion-icon>
+                    <span>Pay ₱{{ a.total_amount }}</span>
+                  </a>
+                </div>
+              }
+
+              @if (a.payment_status === 'paid' && tab() === 'upcoming') {
+                <div class="paid-tag">
+                  <ion-icon name="checkmark-circle"></ion-icon>
+                  <span>Paid</span>
+                </div>
+              }
+
               @if (tab() === 'history' && a.status === 'completed') {
                 <div class="review-cta">
                   @if (reviewedIds().has(a.id)) {
@@ -277,6 +293,34 @@ import { ReviewsApi, Review } from '../../../core/reviews.service';
     .note-row.treatment .note-label { color: #1e6b3d; }
     .note-label ion-icon { font-size: 14px; }
     .note-text { font-size: 13px; color: #0A1E29; line-height: 1.45; }
+
+    .pay-cta { margin-top: 12px; }
+    .pay-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #0A1E29;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 10px 18px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 700;
+      transition: background 0.15s;
+    }
+    .pay-btn:hover { background: #142635; }
+    .pay-btn ion-icon { font-size: 16px; }
+
+    .paid-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1e6b3d;
+    }
+    .paid-tag ion-icon { font-size: 16px; }
 
     .review-cta { margin-top: 12px; }
     .review-btn {

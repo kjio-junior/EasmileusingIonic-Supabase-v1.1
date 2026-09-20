@@ -16,6 +16,8 @@ export interface Appointment {
   notes: string | null;
   treatment_notes: string | null;
   total_amount: number;
+  payment_method: string | null;
+  transaction_id: string | null;
   payment_status: string;
   created_at: string;
   dentist: { id: string; first_name: string; last_name: string } | null;
@@ -51,5 +53,26 @@ export class AppointmentsApi {
       )
     );
     return res.busy;
+  }
+
+  async getOne(id: string): Promise<Appointment> {
+    return firstValueFrom(
+      this.http.get<{ appointment: Appointment }>(
+        `${environment.apiUrl}/appointments/${id}`
+      )
+    ).then(r => r.appointment);
+  }
+
+  async pay(id: string, card: {
+    card_number: string;
+    card_name: string;
+    expiry: string;
+    cvc: string;
+  }): Promise<{ appointment: Appointment; transaction_id: string }> {
+    return firstValueFrom(
+      this.http.post<{ appointment: Appointment; transaction_id: string }>(
+        `${environment.apiUrl}/appointments/${id}/pay`, card
+      )
+    );
   }
 }
