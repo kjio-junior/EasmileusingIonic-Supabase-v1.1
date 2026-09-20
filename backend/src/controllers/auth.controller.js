@@ -1,6 +1,8 @@
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { supabaseAdmin } = require('../config/supabase');
 const { signAccess, signRefresh } = require('../utils/jwt');
+const { sendPasswordResetEmail } = require('../utils/email');
 
 async function login(req, res) {
   const { email, password } = req.body || {};
@@ -236,4 +238,83 @@ async function uploadAvatar(req, res) {
   res.json({ user });
 }
 
-module.exports = { login, register, adminLogin, getProfile, updateProfile, uploadAvatar };
+async function forgotPassword(req, res) {
+  const { email } = req.body || {};
+  if (!email) return res.status(400).json({ error: 'Email required' });
+
+  const genericMessage = 'If an account exists, a reset link has been sent.';
+
+  const { data: user } = await supabaseAdmin
+    .from('users')
+    .select('id, first_name, email')
+    .eq('email', String(email).toLowerCase().trim())
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  // Always return the same message whether or not the user exists (prevents enumeration)
+  if (!user) return res.json({ message: genericMessage });
+
+  // Generate a secure, single-use token
+  const token = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+  await supabaseAdmin.from('password_resets').insert({
+    user_id: user.id,
+    token_hash: tokenHash,
+    expires_at: expiresAt.toISOString()
+  });
+
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+  const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+
+  try {
+    await sendPasswordResetEmail(user.email, user.first_name, resetUrl);
+  } catch {
+    // Swallow — don't leak whether email exists
+  }
+
+  res.json({ message: genericMessage });
+}
+
+async function resetPassword(req, res) {
+  const { token, newPassword } = req.body || {};
+  if (!token || !newPassword) {
+    return res.status(400).json({ error: 'Token and new password required' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  }
+
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  const { data: reset } = await supabaseAdmin
+    .from('password_resets')
+    .select('id, user_id, expires_at, used_at')
+    .eq('token_hash', tokenHash)
+    .maybeSingle();
+
+  if (!reset || reset.used_at || new Date(reset.expires_at) < new Date()) {
+    return res.status(400).json({ error: 'Invalid or expired token' });
+  }
+
+  const hash = await bcrypt.hash(newPassword, 10);
+
+  await supabaseAdmin
+    .from('users')
+    .update({ password_hash: hash, updated_at: new Date().toISOString() })
+    .eq('id', reset.user_id);
+
+  await supabaseAdmin
+    .from('password_resets')
+    .update({ used_at: new Date().toISOString() })
+    .eq('id', reset.id);
+
+  res.json({ message: 'Password updated successfully' });
+}
+
+module.exports = {
+  login, register, adminLogin,
+  getProfile, updateProfile, uploadAvatar,
+  forgotPassword, resetPassword
+};

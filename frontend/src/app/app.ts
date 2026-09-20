@@ -20,18 +20,21 @@ import {
   timeOutline, alertCircleOutline, checkmarkCircleOutline, closeCircleOutline,
   banOutline, createOutline, addOutline, trashOutline, closeOutline,
   trendingUpOutline, arrowDownOutline, arrowBackOutline, arrowForwardOutline, lockClosedOutline,
+  lockOpenOutline, keyOutline,
   flagOutline, mailOutline, callOutline,
   locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline,
   imagesOutline, linkOutline, notificationsOutline, notificationsOffOutline, pricetagOutline, chatbubbleOutline
 } from 'ionicons/icons';
 import { AuthService } from './core/auth.service';
+import { LocalStorageNoticeComponent } from './shared/local-storage-notice.component';
 
 @Component({
   standalone: true,
   selector: 'app-root',
   imports: [
     IonApp, IonRouterOutlet, IonMenu, IonHeader, IonToolbar, IonTitle, IonContent,
-    IonList, IonItem, IonIcon, IonLabel, IonMenuToggle, RouterLink, RouterLinkActive
+    IonList, IonItem, IonIcon, IonLabel, IonMenuToggle, RouterLink, RouterLinkActive,
+    LocalStorageNoticeComponent
   ],
   template: `
     <ion-app>
@@ -77,6 +80,7 @@ import { AuthService } from './core/auth.service';
         </ion-menu>
       }
       <ion-router-outlet id="customer-content"></ion-router-outlet>
+      <app-local-storage-notice></app-local-storage-notice>
     </ion-app>
   `,
   styles: [`
@@ -112,6 +116,7 @@ export class App {
       timeOutline, alertCircleOutline, checkmarkCircleOutline, closeCircleOutline,
       banOutline, createOutline, addOutline, trashOutline, closeOutline,
       trendingUpOutline, arrowDownOutline, arrowBackOutline, arrowForwardOutline, lockClosedOutline,
+      lockOpenOutline, keyOutline,
       flagOutline, mailOutline, callOutline,
       locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline,
       imagesOutline, linkOutline, notificationsOutline, notificationsOffOutline, pricetagOutline, chatbubbleOutline

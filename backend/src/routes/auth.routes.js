@@ -1,7 +1,8 @@
 const express = require('express');
 const multer = require('multer');
 const {
-  login, register, adminLogin, getProfile, updateProfile, uploadAvatar
+  login, register, adminLogin, getProfile, updateProfile, uploadAvatar,
+  forgotPassword, resetPassword
 } = require('../controllers/auth.controller');
 const { authRequired } = require('../middleware/auth');
 
@@ -25,5 +26,7 @@ router.post('/admin-login', adminLogin);
 router.get('/profile', authRequired, getProfile);
 router.put('/profile', authRequired, updateProfile);
 router.post('/profile/avatar', authRequired, upload.single('avatar'), uploadAvatar);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 module.exports = router;

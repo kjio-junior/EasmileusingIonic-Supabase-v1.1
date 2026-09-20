@@ -35,31 +35,26 @@ import { WishlistStore } from '../../../core/wishlist.store';
         <div class="loading"><ion-spinner name="crescent"></ion-spinner></div>
       } @else if (service(); as s) {
         <section class="hero">
-          <button
-            type="button"
-            class="hero-heart"
-            [class.active]="wishlist.has(s.id)"
-            (click)="toggleWishlist(s.id)">
-            <ion-icon [name]="wishlist.has(s.id) ? 'heart' : 'heart-outline'"></ion-icon>
-          </button>
-          <div class="hero-icon">
-            <ion-icon [name]="iconFor(s.category)"></ion-icon>
+          <div class="hero-img" [style.background-image]="'url(' + imageFor(s) + ')'">
+            <div class="hero-overlay"></div>
+            <button type="button" class="hero-heart" [class.active]="wishlist.has(s.id)" (click)="toggleWishlist(s.id)">
+              <ion-icon [name]="wishlist.has(s.id) ? 'heart' : 'heart-outline'"></ion-icon>
+            </button>
           </div>
-          <h1 class="hero-name">{{ s.name }}</h1>
-          <div class="hero-price">From ₱{{ s.price }}</div>
-
-          @if (summary() && summary()!.count > 0) {
-            <div class="hero-rating">
-              <div class="stars">
-                @for (star of [1,2,3,4,5]; track star) {
-                  <ion-icon
-                    [name]="star <= Math.round(summary()!.average) ? 'star' : 'star-outline'">
-                  </ion-icon>
-                }
+          <div class="hero-info">
+            <h1 class="hero-name">{{ s.name }}</h1>
+            <div class="hero-price">From ₱{{ s.price }}</div>
+            @if (summary() && summary()!.count > 0) {
+              <div class="hero-rating">
+                <div class="stars">
+                  @for (star of [1,2,3,4,5]; track star) {
+                    <ion-icon [name]="star <= Math.round(summary()!.average) ? 'star' : 'star-outline'"></ion-icon>
+                  }
+                </div>
+                <span class="rating-text">{{ summary()!.average }} · {{ summary()!.count }} review{{ summary()!.count === 1 ? '' : 's' }}</span>
               </div>
-              <span class="rating-text">{{ summary()!.average }} · {{ summary()!.count }} review{{ summary()!.count === 1 ? '' : 's' }}</span>
-            </div>
-          }
+            }
+          </div>
         </section>
 
         <section class="block">
@@ -159,11 +154,12 @@ import { WishlistStore } from '../../../core/wishlist.store';
     .brand-accent { color: #4EBE7D; }
     .bg { --background: #ffffff; }
 
-    .hero {
-      position: relative;
-      background: #e6f4fb; padding: 28px 20px;
-      text-align: center; border-radius: 0 0 24px 24px;
+    .hero { padding: 0 0 8px; }
+    .hero-img {
+      position: relative; aspect-ratio: 16 / 9; background-size: cover;
+      background-position: center; background-color: #e6f4fb;
     }
+    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,30,41,0.1) 0%, rgba(10,30,41,0.5) 100%); }
     .hero-heart {
       position: absolute;
       top: 16px;
@@ -172,27 +168,22 @@ import { WishlistStore } from '../../../core/wishlist.store';
       height: 40px;
       border-radius: 50%;
       border: 0;
-      background: #ffffff;
+      background: rgba(255,255,255,0.95);
       color: #7a8a97;
       display: grid; place-items: center;
       font-size: 20px;
       cursor: pointer;
-      transition: all 0.15s;
-      box-shadow: 0 2px 8px rgba(10,30,41,0.08);
+      transition: all 0.15s; backdrop-filter: blur(6px);
+      box-shadow: 0 2px 10px rgba(10,30,41,0.15);
     }
-    .hero-heart:hover { transform: scale(1.1); }
+    .hero-heart:hover { transform: scale(1.08); }
     .hero-heart.active { color: #e74c6b; }
-    .hero-icon {
-      width: 64px; height: 64px; border-radius: 50%;
-      background: #ffffff; color: #4EBE7D;
-      display: grid; place-items: center; font-size: 32px;
-      margin: 0 auto 12px;
-    }
-    .hero-name { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: #0A1E29; }
-    .hero-price { color: #0A1E29; font-size: 14px; font-weight: 600; }
+    .hero-info { padding: 20px 20px 8px; }
+    .hero-name { font-size: 24px; font-weight: 700; margin: 0 0 4px; color: #0A1E29; letter-spacing: -0.5px; }
+    .hero-price { color: #0A1E29; font-size: 15px; font-weight: 600; }
 
     .hero-rating {
-      display: flex; gap: 8px; align-items: center; justify-content: center;
+      display: flex; gap: 8px; align-items: center;
       margin-top: 12px;
     }
     .stars { display: flex; gap: 2px; }
@@ -343,6 +334,18 @@ export class ServiceDetailPage implements OnInit {
       case 'surgical':    return 'medical-outline';
       case 'diagnostic':  return 'eye-outline';
       default:            return 'ellipsis-horizontal-outline';
+    }
+  }
+
+  imageFor(s: Service): string {
+    if (s.image_url) return s.image_url;
+    switch (s.category) {
+      case 'preventive':  return 'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=1200&q=80';
+      case 'restorative': return 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=1200&q=80';
+      case 'cosmetic':    return 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=1200&q=80';
+      case 'surgical':    return 'https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=1200&q=80';
+      case 'diagnostic':  return 'https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=1200&q=80';
+      default:            return 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=1200&q=80';
     }
   }
 

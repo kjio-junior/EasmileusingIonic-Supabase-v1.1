@@ -24,6 +24,15 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register.page').then(m => m.RegisterPage)
   },
   {
+    path: 'forgot-password',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/forgot-password.page').then(m => m.ForgotPasswordPage)
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./features/auth/reset-password.page').then(m => m.ResetPasswordPage)
+  },
+  {
     path: 'ea-admin',
     pathMatch: 'full',
     redirectTo: 'ea-admin/login'

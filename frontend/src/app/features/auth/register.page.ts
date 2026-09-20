@@ -145,6 +145,21 @@ import { AuthService } from '../../core/auth.service';
               <p class="hint">Minimum 6 characters. Use something memorable.</p>
             </div>
 
+            <div class="field-group">
+              <label class="field-label">Confirm Password <span class="req">*</span></label>
+              <ion-item lines="none" class="field" [class.invalid]="submitted() && confirmPassword !== password">
+                <ion-icon slot="start" name="lock-closed-outline" class="field-icon"></ion-icon>
+                <ion-input
+                  [type]="showPassword ? 'text' : 'password'"
+                  placeholder="Type it again"
+                  [(ngModel)]="confirmPassword"
+                  autocomplete="new-password"
+                  [disabled]="loading()"
+                  (keyup.enter)="submit()">
+                </ion-input>
+              </ion-item>
+            </div>
+
             @if (error()) {
               <div class="err-box">
                 <ion-icon name="alert-circle-outline"></ion-icon>
@@ -482,6 +497,7 @@ export class RegisterPage {
   email = '';
   phone = '';
   password = '';
+  confirmPassword = '';
   showPassword = false;
   loading = signal(false);
   error = signal<string | null>(null);
@@ -511,6 +527,10 @@ export class RegisterPage {
     }
     if (this.password.length < 6) {
       this.error.set('Password must be at least 6 characters');
+      return;
+    }
+    if (this.password !== this.confirmPassword) {
+      this.error.set('Passwords do not match');
       return;
     }
 

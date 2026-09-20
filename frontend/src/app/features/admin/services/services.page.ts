@@ -16,6 +16,7 @@ interface FormState {
   price: number;
   category: 'preventive' | 'restorative' | 'cosmetic' | 'surgical' | 'diagnostic';
   duration_minutes: number;
+  image_url: string;
   is_active: boolean;
 }
 
@@ -25,6 +26,7 @@ const EMPTY_FORM: FormState = {
   price: 0,
   category: 'preventive',
   duration_minutes: 30,
+  image_url: '',
   is_active: true
 };
 
@@ -83,8 +85,13 @@ const EMPTY_FORM: FormState = {
             @for (s of services(); track s.id) {
               <div class="service-card" [class.inactive]="!s.is_active">
                 <div class="card-top">
-                  <div class="icon-circle" [attr.data-category]="s.category">
-                    <ion-icon [name]="iconFor(s.category)"></ion-icon>
+                  <div
+                    class="icon-circle"
+                    [attr.data-category]="s.category"
+                    [style.background-image]="s.image_url ? 'url(' + s.image_url + ')' : null">
+                    @if (!s.image_url) {
+                      <ion-icon [name]="iconFor(s.category)"></ion-icon>
+                    }
                   </div>
                   @if (!s.is_active) {
                     <span class="inactive-badge">Inactive</span>
@@ -198,6 +205,20 @@ const EMPTY_FORM: FormState = {
               </ion-input>
             </ion-item>
 
+            <ion-item lines="none" class="field">
+              <ion-input
+                label="Image URL"
+                labelPlacement="floating"
+                type="url"
+                [(ngModel)]="form.image_url"
+                [disabled]="saving()">
+              </ion-input>
+            </ion-item>
+
+            @if (form.image_url) {
+              <div class="img-preview" [style.background-image]="'url(' + form.image_url + ')' "></div>
+            }
+
             <ion-item lines="none" class="field toggle-field">
               <ion-toggle [(ngModel)]="form.is_active" [disabled]="saving()">
                 Active (visible to customers)
@@ -290,10 +311,12 @@ const EMPTY_FORM: FormState = {
       margin-bottom: 10px;
     }
     .icon-circle {
-      width: 42px; height: 42px; border-radius: 50%;
+      width: 56px; height: 56px; border-radius: 12px;
       display: grid; place-items: center;
       font-size: 22px; color: #4EBE7D;
       background: #e6f4fb;
+      background-size: cover;
+      background-position: center;
     }
     .icon-circle[data-category="preventive"]  { background: #d7f0e0; color: #1e6b3d; }
     .icon-circle[data-category="restorative"] { background: #d6e8ff; color: #1a4f8a; }
@@ -377,6 +400,16 @@ const EMPTY_FORM: FormState = {
       --padding-start: 4px;
       font-size: 14px;
       color: #0A1E29;
+    }
+
+    .img-preview {
+      margin: 0 0 12px;
+      aspect-ratio: 16 / 9;
+      border-radius: 14px;
+      background-size: cover;
+      background-position: center;
+      background-color: #e6f4fb;
+      border: 1px solid #e6eef5;
     }
 
     .err { color: #c0392b; font-size: 13px; margin: 4px 4px 0; }
@@ -490,6 +523,7 @@ export class AdminServicesPage implements OnInit {
       price: s.price,
       category: s.category,
       duration_minutes: s.duration_minutes,
+      image_url: s.image_url ?? '',
       is_active: s.is_active
     };
     this.formError.set(null);
@@ -528,6 +562,7 @@ export class AdminServicesPage implements OnInit {
         price: Number(this.form.price),
         category: this.form.category,
         duration_minutes: Number(this.form.duration_minutes) || 30,
+        image_url: this.form.image_url.trim() || null,
         is_active: this.form.is_active
       };
 

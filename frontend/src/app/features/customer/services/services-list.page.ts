@@ -66,14 +66,17 @@ type SortKey = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc';
           @for (s of filtered(); track s.id) {
             <div class="card-wrap">
               <a class="service-card" [routerLink]="['/app/services', s.id]" (click)="onCardClick($event)">
-                <div class="icon-circle">
-                  <ion-icon [name]="iconFor(s.category)"></ion-icon>
+                <div class="card-img" [style.background-image]="'url(' + imageFor(s) + ')'">
+                  <div class="img-overlay"></div>
+                  <span class="cat-chip" [attr.data-category]="s.category">{{ s.category }}</span>
                 </div>
-                <h3 class="service-name">{{ s.name }}</h3>
-                <p class="service-desc">{{ s.description }}</p>
-                <div class="service-foot">
-                  <span class="price">From ₱{{ s.price }}</span>
-                  <span class="chev"><ion-icon name="chevron-forward-outline"></ion-icon></span>
+                <div class="card-body">
+                  <h3 class="service-name">{{ s.name }}</h3>
+                  <p class="service-desc">{{ s.description }}</p>
+                  <div class="service-foot">
+                    <span class="price">From ₱{{ s.price }}</span>
+                    <span class="duration">{{ s.duration_minutes }} min</span>
+                  </div>
                 </div>
               </a>
 
@@ -81,7 +84,8 @@ type SortKey = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc';
                 type="button"
                 class="heart-btn"
                 [class.active]="wishlist.has(s.id)"
-                (click)="onHeartClick($event, s)">
+                (click)="onHeartClick($event, s)"
+                [attr.aria-label]="wishlist.has(s.id) ? 'Remove from wishlist' : 'Add to wishlist'">
                 <ion-icon [name]="wishlist.has(s.id) ? 'heart' : 'heart-outline'"></ion-icon>
               </button>
             </div>
@@ -116,7 +120,7 @@ type SortKey = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc';
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      padding: 4px 16px 10px;
+      padding: 4px 16px 12px;
       scrollbar-width: none;
     }
     .sort-row::-webkit-scrollbar { display: none; }
@@ -136,56 +140,124 @@ type SortKey = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc';
     .sort-chip.active { background: #0A1E29; color: #ffffff; border-color: #0A1E29; }
 
     .service-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
       padding: 4px 20px 90px;
     }
 
     .card-wrap { position: relative; }
 
     .service-card {
-      display: flex; flex-direction: column;
-      background: #e6f4fb; border-radius: 16px;
-      padding: 14px; text-decoration: none; color: inherit;
-      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      border-radius: 18px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid #e6eef5;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .icon-circle {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: #ffffff; color: #4EBE7D;
-      display: grid; place-items: center; font-size: 20px;
-      margin-bottom: 8px;
+    .service-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(10,30,41,0.08);
     }
-    .service-name { font-size: 14px; font-weight: 700; margin: 0 0 4px; color: #0A1E29; padding-right: 32px; }
-    .service-desc { font-size: 11px; color: #4a6272; margin: 0 0 10px; line-height: 1.3; flex: 1; }
-    .service-foot { display: flex; align-items: center; justify-content: space-between; }
-    .price { font-size: 11px; color: #0A1E29; font-weight: 600; }
-    .chev {
-      width: 22px; height: 22px; border-radius: 50%;
-      background: #ffffff; display: grid; place-items: center;
-      font-size: 12px; color: #4EBE7D;
+
+    .card-img {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background-size: cover;
+      background-position: center;
+      background-color: #e6f4fb;
+    }
+    .img-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(10,30,41,0.35) 100%);
+    }
+    .cat-chip {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(6px);
+      color: #0A1E29;
+    }
+
+    .card-body {
+      padding: 14px 16px 16px;
+    }
+    .service-name {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 4px;
+      color: #0A1E29;
+      padding-right: 40px;
+    }
+    .service-desc {
+      font-size: 12.5px;
+      color: #4a6272;
+      margin: 0 0 12px;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .service-foot {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding-top: 10px;
+      border-top: 1px solid #eef3f8;
+    }
+    .price {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0A1E29;
+    }
+    .duration {
+      font-size: 11px;
+      color: #7a8a97;
     }
 
     .heart-btn {
       position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 32px;
-      height: 32px;
+      top: 12px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       border: 0;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.92);
       color: #7a8a97;
       display: grid; place-items: center;
-      font-size: 16px;
+      font-size: 18px;
       cursor: pointer;
       transition: all 0.15s;
       z-index: 2;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(6px);
+      box-shadow: 0 2px 8px rgba(10,30,41,0.1);
     }
-    .heart-btn:hover { transform: scale(1.1); }
+    .heart-btn:hover { transform: scale(1.08); }
     .heart-btn.active { color: #e74c6b; }
 
     .loading { display: grid; place-items: center; padding: 40px; }
-    .empty { color: #7a8a97; font-size: 13px; grid-column: span 2; text-align: center; padding: 20px; }
+    .empty { color: #7a8a97; font-size: 13px; text-align: center; padding: 20px; }
+
+    @media (min-width: 768px) {
+      .service-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+    }
+    @media (min-width: 1024px) {
+      .service-grid { grid-template-columns: 1fr 1fr 1fr; padding-bottom: 40px; }
+    }
   `]
 })
 export class ServicesListPage implements OnInit {
@@ -231,6 +303,19 @@ export class ServicesListPage implements OnInit {
     return sorted;
   }
 
+  // Fallback image by category if DB image_url is empty
+  imageFor(s: Service): string {
+    if (s.image_url) return s.image_url;
+    switch (s.category) {
+      case 'preventive':  return 'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=800&q=80';
+      case 'restorative': return 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=800&q=80';
+      case 'cosmetic':    return 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=800&q=80';
+      case 'surgical':    return 'https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=800&q=80';
+      case 'diagnostic':  return 'https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=800&q=80';
+      default:            return 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&q=80';
+    }
+  }
+
   async onHeartClick(ev: Event, s: Service) {
     ev.preventDefault();
     ev.stopPropagation();
@@ -239,16 +324,5 @@ export class ServicesListPage implements OnInit {
 
   onCardClick(ev: Event) {
     (ev.currentTarget as HTMLElement)?.blur();
-  }
-
-  iconFor(category: string): string {
-    switch (category) {
-      case 'preventive':  return 'sparkles-outline';
-      case 'restorative': return 'construct-outline';
-      case 'cosmetic':    return 'color-wand-outline';
-      case 'surgical':    return 'medical-outline';
-      case 'diagnostic':  return 'eye-outline';
-      default:            return 'ellipsis-horizontal-outline';
-    }
   }
 }

@@ -103,7 +103,7 @@ import { AuthService } from '../../core/auth.service';
             </div>
 
             <div class="row-forgot">
-              <a class="forgot" routerLink="/onboarding">Forgot password?</a>
+              <a class="forgot" routerLink="/forgot-password">Forgot password?</a>
             </div>
 
             @if (error()) {
