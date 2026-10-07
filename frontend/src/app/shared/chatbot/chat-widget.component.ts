@@ -89,7 +89,7 @@ import { ChatbotService } from '../../core/chatbot.service';
   styles: [`
     .chat-fab {
       position: fixed;
-      bottom: 24px;
+      bottom: max(24px, env(safe-area-inset-bottom));
       right: 24px;
       z-index: 200;
       width: 56px;
@@ -289,13 +289,20 @@ import { ChatbotService } from '../../core/chatbot.service';
 
     @media (max-width: 480px) {
       .chat-panel {
-        right: 8px; left: 8px; bottom: 8px;
+        top: max(8px, env(safe-area-inset-top));
+        left: max(8px, env(safe-area-inset-left));
+        right: max(8px, env(safe-area-inset-right));
+        bottom: max(8px, env(safe-area-inset-bottom));
         width: auto;
         max-width: none;
-        height: calc(100vh - 16px);
+        height: auto;
         max-height: none;
+        border-radius: 16px;
       }
-      .chat-fab { bottom: 16px; right: 16px; }
+      .chat-fab {
+        bottom: max(16px, env(safe-area-inset-bottom));
+        right: 16px;
+      }
     }
   `]
 })
