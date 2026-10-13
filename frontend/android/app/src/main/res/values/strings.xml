@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">EAsmile</string>
+    <string name="title_activity_main">EAsmile</string>
+    <string name="package_name">com.easmile.app</string>
+    <string name="custom_url_scheme">com.easmile.app</string>
+</resources>
