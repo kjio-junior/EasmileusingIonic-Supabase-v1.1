@@ -21,7 +21,7 @@ import {
   timeOutline, alertCircleOutline, checkmarkCircleOutline, closeCircleOutline,
   banOutline, createOutline, addOutline, trashOutline, closeOutline,
   trendingUpOutline, arrowUpOutline, arrowDownOutline, arrowBackOutline, arrowForwardOutline, lockClosedOutline,
-  lockOpenOutline, keyOutline, cardOutline, checkmark,
+  lockOpenOutline, keyOutline, cardOutline, checkmark, checkmarkCircle,
   flagOutline, mailOutline, callOutline,
   locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline,
   imagesOutline, linkOutline, notificationsOutline, notificationsOffOutline, pricetagOutline, chatbubbleOutline,

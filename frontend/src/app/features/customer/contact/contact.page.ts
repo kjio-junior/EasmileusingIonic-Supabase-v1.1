@@ -4,12 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import {
   IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonMenuButton,
+  IonBackButton,
   IonContent, IonSpinner, IonItem, IonInput, IonTextarea,
   ToastController
 } from '@ionic/angular/standalone';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { FaqsApi, Faq } from '../../../core/faqs.service';
+import { AuthService } from '../../../core/auth.service';
 
 @Component({
   standalone: true,
@@ -17,13 +19,18 @@ import { FaqsApi, Faq } from '../../../core/faqs.service';
   imports: [
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonMenuButton,
+    IonBackButton,
     IonContent, IonSpinner, IonItem, IonInput, IonTextarea
   ],
   template: `
     <ion-header class="ion-no-border">
       <ion-toolbar class="top-bar">
         <ion-buttons slot="start">
-          <ion-menu-button></ion-menu-button>
+          @if (auth.token()) {
+            <ion-menu-button></ion-menu-button>
+          } @else {
+            <ion-back-button defaultHref="/onboarding" text=""></ion-back-button>
+          }
         </ion-buttons>
         <ion-title class="brand">EA<span class="brand-accent">smile</span></ion-title>
       </ion-toolbar>
@@ -273,7 +280,8 @@ export class ContactPage implements OnInit {
   constructor(
     private http: HttpClient,
     private faqsApi: FaqsApi,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    public auth: AuthService
   ) {}
 
   async ngOnInit() {

@@ -18,7 +18,6 @@ import { AuthService } from '../../core/auth.service';
     <ion-content class="auth-bg" [fullscreen]="true">
       <div class="shell">
 
-        <!-- LEFT: BRAND PANEL -->
         <aside class="brand-panel">
           <div class="brand-photo"></div>
           <div class="brand-overlay"></div>
@@ -35,25 +34,14 @@ import { AuthService } from '../../core/auth.service';
             </p>
 
             <div class="brand-features">
-              <div class="feature">
-                <div class="feature-dot"></div>
-                <span>Free forever</span>
-              </div>
-              <div class="feature">
-                <div class="feature-dot"></div>
-                <span>No card required</span>
-              </div>
-              <div class="feature">
-                <div class="feature-dot"></div>
-                <span>Book in under a minute</span>
-              </div>
+              <div class="feature"><div class="feature-dot"></div><span>Free forever</span></div>
+              <div class="feature"><div class="feature-dot"></div><span>No card required</span></div>
+              <div class="feature"><div class="feature-dot"></div><span>Book in under a minute</span></div>
             </div>
           </div>
         </aside>
 
-        <!-- RIGHT: FORM PANEL -->
         <main class="form-panel">
-
           <button type="button" class="back-link" (click)="goBack()">
             <ion-icon name="arrow-back-outline"></ion-icon>
             <span>Back</span>
@@ -71,70 +59,99 @@ import { AuthService } from '../../core/auth.service';
             <div class="grid-2">
               <div class="field-group">
                 <label class="field-label">First name <span class="req">*</span></label>
-                <ion-item lines="none" class="field" [class.invalid]="submitted() && !first_name.trim()">
+                <ion-item lines="none" class="field" [class.invalid]="showError('firstName')">
                   <ion-input
                     type="text"
                     placeholder="Jane"
                     [(ngModel)]="first_name"
+                    (ionBlur)="markTouched('firstName')"
+                    (ionFocus)="markFocused('firstName')"
                     autocomplete="given-name"
+                    maxlength="50"
                     [disabled]="loading()">
                   </ion-input>
                 </ion-item>
+                @if (showError('firstName')) {
+                  <p class="field-err">{{ fieldErrors()['firstName'] }}</p>
+                }
               </div>
 
               <div class="field-group">
                 <label class="field-label">Last name <span class="req">*</span></label>
-                <ion-item lines="none" class="field" [class.invalid]="submitted() && !last_name.trim()">
+                <ion-item lines="none" class="field" [class.invalid]="showError('lastName')">
                   <ion-input
                     type="text"
                     placeholder="Doe"
                     [(ngModel)]="last_name"
+                    (ionBlur)="markTouched('lastName')"
+                    (ionFocus)="markFocused('lastName')"
                     autocomplete="family-name"
+                    maxlength="50"
                     [disabled]="loading()">
                   </ion-input>
                 </ion-item>
+                @if (showError('lastName')) {
+                  <p class="field-err">{{ fieldErrors()['lastName'] }}</p>
+                }
               </div>
             </div>
 
             <div class="field-group">
               <label class="field-label">Email <span class="req">*</span></label>
-              <ion-item lines="none" class="field" [class.invalid]="submitted() && !email.trim()">
+              <ion-item lines="none" class="field" [class.invalid]="showError('email')">
                 <ion-icon slot="start" name="mail-outline" class="field-icon"></ion-icon>
                 <ion-input
                   type="email"
+                  inputmode="email"
                   placeholder="you@example.com"
                   [(ngModel)]="email"
+                  (ionBlur)="markTouched('email')"
+                  (ionFocus)="markFocused('email')"
                   autocomplete="email"
+                  maxlength="100"
                   [disabled]="loading()">
                 </ion-input>
               </ion-item>
+              @if (showError('email')) {
+                <p class="field-err">{{ fieldErrors()['email'] }}</p>
+              }
             </div>
 
             <div class="field-group">
               <label class="field-label">Phone <span class="req">*</span></label>
-              <ion-item lines="none" class="field" [class.invalid]="submitted() && !phone.trim()">
+              <ion-item lines="none" class="field" [class.invalid]="showError('phone')">
                 <ion-icon slot="start" name="call-outline" class="field-icon"></ion-icon>
                 <ion-input
                   type="tel"
-                  placeholder="+63 912 345 6789"
+                  inputmode="tel"
+                  placeholder="09171234567"
                   [(ngModel)]="phone"
+                  (ionBlur)="markTouched('phone')"
+                  (ionFocus)="markFocused('phone')"
                   autocomplete="tel"
+                  maxlength="14"
                   [disabled]="loading()">
                 </ion-input>
               </ion-item>
+              @if (showError('phone')) {
+                <p class="field-err">{{ fieldErrors()['phone'] }}</p>
+              } @else {
+                <p class="field-hint">Digits only, 10–13 numbers (e.g. 09171234567).</p>
+              }
             </div>
 
             <div class="field-group">
               <label class="field-label">Password <span class="req">*</span></label>
-              <ion-item lines="none" class="field" [class.invalid]="submitted() && password.length < 6">
+              <ion-item lines="none" class="field" [class.invalid]="showError('password')">
                 <ion-icon slot="start" name="lock-closed-outline" class="field-icon"></ion-icon>
                 <ion-input
                   [type]="showPassword ? 'text' : 'password'"
                   placeholder="At least 6 characters"
                   [(ngModel)]="password"
+                  (ionBlur)="markTouched('password')"
+                  (ionFocus)="markFocused('password')"
                   autocomplete="new-password"
-                  [disabled]="loading()"
-                  (keyup.enter)="submit()">
+                  [disabled]="loading()">
                 </ion-input>
                 @if (password.length > 0) {
                   <ion-button fill="clear" slot="end" class="eye-btn" (click)="showPassword = !showPassword">
@@ -142,22 +159,31 @@ import { AuthService } from '../../core/auth.service';
                   </ion-button>
                 }
               </ion-item>
-              <p class="hint">Minimum 6 characters. Use something memorable.</p>
+              @if (showError('password')) {
+                <p class="field-err">{{ fieldErrors()['password'] }}</p>
+              } @else {
+                <p class="field-hint">Minimum 6 characters. Use something memorable.</p>
+              }
             </div>
 
             <div class="field-group">
               <label class="field-label">Confirm Password <span class="req">*</span></label>
-              <ion-item lines="none" class="field" [class.invalid]="submitted() && confirmPassword !== password">
+              <ion-item lines="none" class="field" [class.invalid]="showError('confirmPassword')">
                 <ion-icon slot="start" name="lock-closed-outline" class="field-icon"></ion-icon>
                 <ion-input
                   [type]="showPassword ? 'text' : 'password'"
                   placeholder="Type it again"
                   [(ngModel)]="confirmPassword"
+                  (ionBlur)="markTouched('confirmPassword')"
+                  (ionFocus)="markFocused('confirmPassword')"
                   autocomplete="new-password"
                   [disabled]="loading()"
                   (keyup.enter)="submit()">
                 </ion-input>
               </ion-item>
+              @if (showError('confirmPassword')) {
+                <p class="field-err">{{ fieldErrors()['confirmPassword'] }}</p>
+              }
             </div>
 
             @if (error()) {
@@ -178,7 +204,7 @@ import { AuthService } from '../../core/auth.service';
 
             <p class="terms">
               By creating an account, you agree to EAsmile's
-              <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.
+              <a routerLink="/terms">Terms</a> and <a routerLink="/privacy">Privacy Policy</a>.
             </p>
 
             <div class="divider"><span>Already registered?</span></div>
@@ -193,164 +219,56 @@ import { AuthService } from '../../core/auth.service';
   `,
   styles: [`
     .auth-bg { --background: #f2f8fc; }
+    .shell { display: flex; min-height: 100vh; background: #ffffff; }
 
-    .shell {
-      display: flex;
-      min-height: 100vh;
-      background: #ffffff;
-    }
-
-    /* ============ LEFT PANEL ============ */
-    .brand-panel {
-      position: relative;
-      flex: 0 0 46%;
-      display: none;
-      overflow: hidden;
-    }
+    .brand-panel { position: relative; flex: 0 0 46%; display: none; overflow: hidden; }
     .brand-photo {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background-image: url('https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=1400&q=80');
-      background-size: cover;
-      background-position: center;
+      background-size: cover; background-position: center;
     }
     .brand-overlay {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background: linear-gradient(180deg, rgba(10,30,41,0.35) 0%, rgba(10,30,41,0.85) 100%);
     }
-    .brand-top {
-      position: absolute;
-      top: 32px;
-      left: 36px;
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      z-index: 2;
-    }
-    .brand-panel .brand-ea    { color: #93D5ED; }
-    .brand-panel .brand-smile { color: #ffffff; }
-    .mobile-brand .brand-ea    { color: #2E9FE0; }
-    .mobile-brand .brand-smile { color: #5BAFE0; }
-
-    .brand-body {
-      position: absolute;
-      bottom: 56px;
-      left: 36px;
-      right: 36px;
-      z-index: 2;
-      color: #ffffff;
-    }
-    .brand-headline {
-      font-size: 44px;
-      font-weight: 800;
-      line-height: 1.05;
-      margin: 0 0 16px;
-      letter-spacing: -1px;
-    }
-    .brand-copy {
-      font-size: 15px;
-      line-height: 1.6;
-      opacity: 0.88;
-      margin: 0 0 24px;
-      max-width: 400px;
-    }
+    .brand-top { position: absolute; top: 32px; left: 36px; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; z-index: 2; }
+    .brand-ea    { color: #93D5ED; }
+    .brand-smile { color: #ffffff; }
+    .brand-body { position: absolute; bottom: 56px; left: 36px; right: 36px; z-index: 2; color: #ffffff; }
+    .brand-headline { font-size: 44px; font-weight: 800; line-height: 1.05; margin: 0 0 16px; letter-spacing: -1px; }
+    .brand-copy { font-size: 15px; line-height: 1.6; opacity: 0.88; margin: 0 0 24px; max-width: 400px; }
     .brand-features { display: flex; flex-direction: column; gap: 10px; }
-    .feature {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      opacity: 0.9;
-    }
-    .feature-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #4EBE7D;
-      box-shadow: 0 0 12px rgba(78,190,125,0.7);
-    }
+    .feature { display: flex; align-items: center; gap: 10px; font-size: 14px; opacity: 0.9; }
+    .feature-dot { width: 8px; height: 8px; border-radius: 50%; background: #4EBE7D; box-shadow: 0 0 12px rgba(78,190,125,0.7); }
 
-    /* ============ RIGHT PANEL ============ */
-    .form-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      background: #ffffff;
-      min-width: 0;
-    }
-
+    .form-panel { flex: 1; display: flex; flex-direction: column; position: relative; background: #ffffff; min-width: 0; }
     .back-link {
-      position: absolute;
-      top: 24px;
-      left: 24px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      border: 0;
-      background: transparent;
-      color: #7a8a97;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 8px 12px;
-      border-radius: 9999px;
+      position: absolute; top: 24px; left: 24px;
+      display: flex; align-items: center; gap: 6px;
+      border: 0; background: transparent;
+      color: #7a8a97; font-size: 13px; font-weight: 600;
+      cursor: pointer; padding: 8px 12px; border-radius: 9999px;
       transition: background 0.15s;
     }
     .back-link:hover { background: #f2f8fc; color: #0A1E29; }
     .back-link ion-icon { font-size: 16px; }
 
-    .form-wrap {
-      width: 100%;
-      max-width: 480px;
-      margin: auto;
-      padding: 80px 28px 40px;
-    }
+    .form-wrap { width: 100%; max-width: 480px; margin: auto; padding: 80px 28px 40px; }
+    .mobile-brand { display: block; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 30px; }
 
-    .mobile-brand {
-      display: block;
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      margin-bottom: 30px;
-    }
-
-    .eyebrow {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #4EBE7D;
-      margin: 0 0 8px;
-    }
-    .title {
-      font-size: 32px;
-      font-weight: 800;
-      color: #0A1E29;
-      margin: 0 0 6px;
-      letter-spacing: -0.5px;
-    }
-    .sub {
-      font-size: 14px;
-      color: #7a8a97;
-      margin: 0 0 28px;
-    }
+    .eyebrow { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #4EBE7D; margin: 0 0 8px; }
+    .title { font-size: 32px; font-weight: 800; color: #0A1E29; margin: 0 0 6px; letter-spacing: -0.5px; }
+    .sub { font-size: 14px; color: #7a8a97; margin: 0 0 28px; }
 
     .field-group { margin-bottom: 18px; }
     .field-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 700;
-      color: #0A1E29;
-      margin: 0 0 8px 4px;
-      letter-spacing: 0.3px;
+      display: block; font-size: 12px; font-weight: 700;
+      color: #0A1E29; margin: 0 0 8px 4px; letter-spacing: 0.3px;
     }
+    .req { color: #e74c3c; margin-left: 2px; }
 
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+    .grid-2 .field-group { margin-bottom: 0; }
 
     .field {
       --background: #f2f8fc;
@@ -363,65 +281,30 @@ import { AuthService } from '../../core/auth.service';
       border: 1px solid transparent;
       transition: border-color 0.15s, background 0.15s;
     }
-    .field:focus-within {
-      border-color: #4EBE7D;
-      --background: #ffffff;
-    }
-    .req {
-      color: #e74c3c;
-      font-weight: 700;
-      margin-left: 2px;
-    }
-
+    .field:focus-within { border-color: #4EBE7D; --background: #ffffff; }
     .field.invalid {
       --background: #fff5f5;
       border-color: #e74c3c !important;
-      box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.14);
-      animation: fieldShake 0.35s ease;
+      box-shadow: 0 0 0 4px rgba(231,76,60,0.14);
+      animation: shake 0.35s ease;
     }
-    .field.invalid .field-icon { color: #e74c3c; }
-
-    @keyframes fieldShake {
-      0%, 100% { transform: translateX(0); }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
       25% { transform: translateX(-4px); }
       75% { transform: translateX(4px); }
     }
-    .field-icon {
-      color: #7a8a97;
-      font-size: 18px;
-      margin-right: 8px;
-    }
-    .field ion-input {
-      --placeholder-color: #b0bcc6;
-      --placeholder-opacity: 1;
-      font-size: 15px;
-    }
+    .field-icon { color: #7a8a97; font-size: 18px; margin-right: 8px; }
+    .field ion-input { --placeholder-color: #b0bcc6; --placeholder-opacity: 1; font-size: 15px; }
+    .eye-btn { --color: #7a8a97; height: 36px; }
 
-    .eye-btn {
-      --color: #7a8a97;
-      --padding-start: 6px;
-      --padding-end: 6px;
-      margin: 0;
-      height: 36px;
-    }
-
-    .hint {
-      font-size: 12px;
-      color: #7a8a97;
-      margin: 8px 4px 0;
-    }
+    .field-err { color: #c0392b; font-size: 12px; margin: 6px 4px 0; font-weight: 600; }
+    .field-hint { color: #7a8a97; font-size: 12px; margin: 6px 4px 0; }
 
     .err-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 14px;
-      background: #ffe0e0;
-      border-radius: 12px;
-      color: #8a1a1a;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 18px;
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; background: #ffe0e0;
+      color: #8a1a1a; border-radius: 12px;
+      font-size: 13px; font-weight: 600; margin-bottom: 18px;
     }
     .err-box ion-icon { font-size: 18px; flex: 0 0 auto; }
 
@@ -430,57 +313,30 @@ import { AuthService } from '../../core/auth.service';
       --background-activated: #142635;
       --border-radius: 9999px;
       --color: #ffffff;
-      height: 52px;
-      font-weight: 700;
-      font-size: 15px;
-      margin: 0;
+      --color-disabled: #ffffff;
+      height: 52px; font-weight: 700; font-size: 15px; margin: 0;
       --box-shadow: 0 8px 24px rgba(10,30,41,0.18);
     }
+    .submit::part(native) { color: #ffffff; }
 
-    .terms {
-      font-size: 12px;
-      color: #7a8a97;
-      text-align: center;
-      margin: 16px 0 0;
-      line-height: 1.5;
-    }
+    .terms { font-size: 12px; color: #7a8a97; text-align: center; margin: 16px 0 0; line-height: 1.5; }
     .terms a { color: #4EBE7D; font-weight: 600; text-decoration: none; }
     .terms a:hover { text-decoration: underline; }
 
-    .divider {
-      position: relative;
-      text-align: center;
-      margin: 28px 0 18px;
-    }
+    .divider { position: relative; text-align: center; margin: 28px 0 18px; }
     .divider::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 0; right: 0;
-      height: 1px;
-      background: #e6eef5;
+      content: ''; position: absolute; top: 50%; left: 0; right: 0;
+      height: 1px; background: #e6eef5;
     }
     .divider span {
-      position: relative;
-      background: #ffffff;
-      padding: 0 14px;
-      font-size: 12px;
-      color: #7a8a97;
-      font-weight: 500;
+      position: relative; background: #ffffff;
+      padding: 0 14px; font-size: 12px; color: #7a8a97; font-weight: 500;
     }
 
-    .signin-line {
-      text-align: center;
-      margin: 0;
-      font-size: 14px;
-      color: #4a6272;
-    }
+    .signin-line { text-align: center; margin: 0; font-size: 14px; color: #4a6272; }
     .signin-link {
-      color: #0A1E29;
-      font-weight: 700;
-      text-decoration: none;
-      border-bottom: 2px solid #4EBE7D;
-      padding-bottom: 2px;
+      color: #0A1E29; font-weight: 700; text-decoration: none;
+      border-bottom: 2px solid #4EBE7D; padding-bottom: 2px;
     }
     .signin-link:hover { color: #4EBE7D; }
 
@@ -499,38 +355,108 @@ export class RegisterPage {
   password = '';
   confirmPassword = '';
   showPassword = false;
+
   loading = signal(false);
-  error = signal<string | null>(null);
   submitted = signal(false);
+  error = signal<string | null>(null);
+  fieldErrors = signal<Record<string, string>>({});
+  touched = signal<Set<string>>(new Set());
 
   constructor(private auth: AuthService, private router: Router) {}
 
-  goBack() {
-    this.router.navigateByUrl('/onboarding');
+  markTouched(field: string) {
+    this.touched.update(s => {
+      const next = new Set(s);
+      next.add(field);
+      return next;
+    });
+    const allErrors = this.validate();
+    this.fieldErrors.update(prev => {
+      const next = { ...prev };
+      if (allErrors[field]) next[field] = allErrors[field];
+      else delete next[field];
+      return next;
+    });
+  }
+
+  markFocused(field: string) {
+    this.touched.update(s => {
+      const next = new Set(s);
+      next.delete(field);
+      return next;
+    });
+  }
+
+  showError(field: string): boolean {
+    return (this.submitted() || this.touched().has(field)) && !!this.fieldErrors()[field];
+  }
+
+  private validate(): Record<string, string> {
+    const errors: Record<string, string> = {};
+
+    const fn = this.first_name.trim();
+    if (!fn) {
+      errors['firstName'] = 'First name is required';
+    } else if (fn.length < 2) {
+      errors['firstName'] = 'Must be at least 2 characters';
+    } else if (!/^[a-zA-Z\s'\-]+$/.test(fn)) {
+      errors['firstName'] = 'Letters, spaces, hyphens and apostrophes only';
+    }
+
+    const ln = this.last_name.trim();
+    if (!ln) {
+      errors['lastName'] = 'Last name is required';
+    } else if (ln.length < 2) {
+      errors['lastName'] = 'Must be at least 2 characters';
+    } else if (!/^[a-zA-Z\s'\-]+$/.test(ln)) {
+      errors['lastName'] = 'Letters, spaces, hyphens and apostrophes only';
+    }
+
+    const em = this.email.trim();
+    if (!em) {
+      errors['email'] = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) {
+      errors['email'] = 'Enter a valid email address';
+    }
+
+    const ph = this.phone.trim();
+    if (!ph) {
+      errors['phone'] = 'Phone is required';
+    } else if (!/^\+?\d+$/.test(ph)) {
+      errors['phone'] = 'Digits only (optional leading +)';
+    } else {
+      const digits = ph.replace(/\D/g, '');
+      if (digits.length < 10) errors['phone'] = 'Must be at least 10 digits';
+      else if (digits.length > 13) errors['phone'] = 'Cannot exceed 13 digits';
+    }
+
+    if (!this.password) {
+      errors['password'] = 'Password is required';
+    } else if (this.password.length < 6) {
+      errors['password'] = 'Password must be at least 6 characters';
+    }
+
+    if (!this.confirmPassword) {
+      errors['confirmPassword'] = 'Please confirm your password';
+    } else if (this.password !== this.confirmPassword) {
+      errors['confirmPassword'] = 'Passwords do not match';
+    }
+
+    return errors;
   }
 
   async submit() {
     this.submitted.set(true);
     this.error.set(null);
 
-    if (!this.first_name.trim() || !this.last_name.trim()) {
-      this.error.set('Enter your first and last name');
-      return;
-    }
-    if (!this.email.trim()) {
-      this.error.set('Enter your email');
-      return;
-    }
-    if (!this.phone.trim()) {
-      this.error.set('Enter your phone number');
-      return;
-    }
-    if (this.password.length < 6) {
-      this.error.set('Password must be at least 6 characters');
-      return;
-    }
-    if (this.password !== this.confirmPassword) {
-      this.error.set('Passwords do not match');
+    const errors = this.validate();
+    this.fieldErrors.set(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setTimeout(() => {
+        const firstInvalid = document.querySelector('.field.invalid');
+        firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
       return;
     }
 
@@ -550,5 +476,9 @@ export class RegisterPage {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  goBack() {
+    this.router.navigateByUrl('/onboarding');
   }
 }

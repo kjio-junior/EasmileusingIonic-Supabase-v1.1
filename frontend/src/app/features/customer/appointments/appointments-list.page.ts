@@ -124,10 +124,17 @@ import { ReviewsApi, Review } from '../../../core/reviews.service';
 
               @if (tab() === 'upcoming' && a.payment_status === 'unpaid') {
                 <div class="pay-cta">
-                  <a class="pay-btn" [routerLink]="['/app/checkout', a.id]">
-                    <ion-icon name="card-outline"></ion-icon>
-                    <span>Pay ₱{{ a.total_amount }}</span>
-                  </a>
+                  @if (a.payment_method === 'cash') {
+                    <div class="pay-later-tag">
+                      <ion-icon name="storefront-outline"></ion-icon>
+                      <span>Pay at clinic</span>
+                    </div>
+                  } @else {
+                    <a class="pay-btn" [routerLink]="['/app/checkout', a.id]">
+                      <ion-icon name="card-outline"></ion-icon>
+                      <span>Pay ₱{{ a.total_amount }}</span>
+                    </a>
+                  }
                 </div>
               }
 
@@ -310,6 +317,14 @@ import { ReviewsApi, Review } from '../../../core/reviews.service';
     }
     .pay-btn:hover { background: #142635; }
     .pay-btn ion-icon { font-size: 16px; }
+
+    .pay-later-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #d7f0e0; color: #1e6b3d;
+      padding: 8px 16px; border-radius: 9999px;
+      font-size: 12px; font-weight: 700;
+    }
+    .pay-later-tag ion-icon { font-size: 16px; }
 
     .paid-tag {
       display: inline-flex;

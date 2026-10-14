@@ -50,15 +50,22 @@ export class ChatbotService {
   private greet() {
     this.push({
       sender: 'bot',
-      text: "Hi! I'm Smile, your EAsmile assistant. Ask me anything, or pick a topic below."
+      text: "Hi! I'm Smile, your EAsmile assistant. Ask me about bookings, payment, or our clinic — or pick a topic below."
     });
   }
 
   suggestions(): string[] {
-    if (!this.faqs.length) {
-      return ['Book an appointment', 'Contact support', 'Payment methods'];
-    }
-    return this.faqs.slice(0, 4).map(f => f.question);
+    const base = [
+      'How do I book an appointment?',
+      'What payment methods do you accept?',
+      'Contact support'
+    ];
+    if (!this.faqs.length) return base;
+
+    // Prefer the first two real FAQs, then fill with base questions
+    const fromFaqs = this.faqs.slice(0, 2).map(f => f.question);
+    const extras = base.filter(b => !fromFaqs.includes(b));
+    return [...fromFaqs, ...extras].slice(0, 3);
   }
 
   async ask(text: string) {
@@ -140,12 +147,20 @@ export class ChatbotService {
     if (/\b(thanks|thank you|ty)\b/.test(q)) {
       return { sender: 'bot', text: "You're welcome! Anything else I can help with?" };
     }
+    if (/\b(faq|faqs|frequently|questions|common questions)\b/.test(q)) {
+      return {
+        sender: 'bot',
+        text: 'Our FAQ page has answers to the most common questions about booking, payment, and clinic policies. Want to see them?',
+        actionLabel: 'Open FAQs',
+        actionLink: '/contact'
+      };
+    }
     if (/\b(book|appointment|schedule|reserve)\b/.test(q)) {
       return {
         sender: 'bot',
         text: 'You can book an appointment by going to the Services tab, picking a service, and tapping "Book Your Appointment". You can also browse all services first.',
         actionLabel: 'Browse Services',
-        actionLink: '/app/services'
+        actionLink: '/services'
       };
     }
     if (/\b(contact|support|help|human|agent|call|email)\b/.test(q)) {
@@ -153,13 +168,15 @@ export class ChatbotService {
         sender: 'bot',
         text: 'We\'d love to help. You can reach us by email at easmile.08@email.com, by phone at +63 123 456 7890, or through our Contact page.',
         actionLabel: 'Open Contact Page',
-        actionLink: '/app/contact'
+        actionLink: '/contact'
       };
     }
     if (/\b(price|cost|how much|fee|payment|pay)\b/.test(q)) {
       return {
         sender: 'bot',
-        text: 'Service prices vary and are shown on each service card. We accept cash, debit/credit cards, and GCash. Payment is collected at the clinic after your visit.'
+        text: 'Service prices vary and are shown on each service card. We accept cash, debit/credit cards, GCash, and QR payments. You can pay online during booking, or at the clinic after your visit.',
+        actionLabel: 'See all FAQs',
+        actionLink: '/contact'
       };
     }
     if (/\b(login|sign in|account|register|sign up)\b/.test(q)) {
@@ -195,14 +212,19 @@ export class ChatbotService {
     }).sort((a, b) => b.score - a.score);
 
     if (scored[0] && scored[0].score > 0) {
-      return { sender: 'bot', text: scored[0].faq.answer };
+      return {
+        sender: 'bot',
+        text: scored[0].faq.answer,
+        actionLabel: 'See all FAQs',
+        actionLink: '/contact'
+      };
     }
 
     return {
       sender: 'bot',
-      text: "I'm not sure I understand that one. You can try asking about bookings, payment, our location, or reach out to a human through our Contact page.",
-      actionLabel: 'Open Contact Page',
-      actionLink: '/app/contact'
+      text: "I'm not sure I understand that one. Try asking about bookings, payment, our location, or check our FAQ page for common questions.",
+      actionLabel: 'Open FAQs',
+      actionLink: '/contact'
     };
   }
 }
