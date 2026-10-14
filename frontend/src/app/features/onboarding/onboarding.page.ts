@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { BannersApi, Banner } from '../../core/banners.service';
+import { ServicesApi } from '../../core/services.service';
+import { Service } from '../../core/services.service';
 import { ChatWidgetComponent } from '../../shared/chatbot/chat-widget.component';
 import {
   IonContent, IonButton, IonIcon
@@ -118,11 +120,11 @@ import {
         <h2 class="section-title">Our Services</h2>
 
         <div class="service-grid">
-          @for (s of services; track s.name) {
-            <div class="service-card">
-              <div class="service-img" [style.background-image]="'url(' + s.image + ')'"></div>
+          @for (s of services(); track s.id) {
+            <a class="service-card" [routerLink]="['/services', s.id]">
+              <div class="service-img" [style.background-image]="'url(' + imageFor(s) + ')'"></div>
               <div class="service-label">{{ s.name }}</div>
-            </div>
+            </a>
           }
         </div>
       </section>
@@ -171,20 +173,106 @@ import {
         </div>
       </section>
 
-      <!-- ================= TEAM ================= -->
-      <section class="team">
-        <div class="section-eyebrow">The People Behind EAsmile</div>
-        <h2 class="section-title">Our Team</h2>
+      <!-- ================= COMPANY HISTORY ================= -->
+      <section class="history-section">
+        <div class="section-eyebrow">Established 2024</div>
+        <h2 class="section-title">Our Journey</h2>
 
-        <div class="team-grid">
-          @for (m of team; track m.name) {
-            <div class="team-card">
-              <div class="team-photo" [style.background-image]="'url(' + m.photo + ')'"></div>
-              <div class="team-name">{{ m.name }}</div>
-              <div class="team-role">{{ m.role }}</div>
+        <div class="timeline">
+          <div class="milestone">
+            <div class="ms-icon"><ion-icon name="bulb-outline"></ion-icon></div>
+            <div class="ms-body">
+              <div class="ms-year">2024</div>
+              <div class="ms-title">The Idea</div>
+              <p>EAsmile was conceived to solve a common frustration — booking dental appointments should not require phone calls or waiting on hold.</p>
             </div>
-          }
+          </div>
+          <div class="milestone">
+            <div class="ms-icon"><ion-icon name="phone-portrait-outline"></ion-icon></div>
+            <div class="ms-body">
+              <div class="ms-year">2024</div>
+              <div class="ms-title">The Platform</div>
+              <p>Our mobile-first platform launched, letting patients browse services, pick a time, and confirm in seconds.</p>
+            </div>
+          </div>
+          <div class="milestone">
+            <div class="ms-icon"><ion-icon name="ribbon-outline"></ion-icon></div>
+            <div class="ms-body">
+              <div class="ms-year">2024</div>
+              <div class="ms-title">Trusted Partners</div>
+              <p>We built a network of licensed dental professionals committed to modern, accessible care.</p>
+            </div>
+          </div>
+          <div class="milestone">
+            <div class="ms-icon"><ion-icon name="people-outline"></ion-icon></div>
+            <div class="ms-body">
+              <div class="ms-year">2024</div>
+              <div class="ms-title">Growing Community</div>
+              <p>Today, EAsmile serves patients across Metro Manila with confidence.</p>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <!-- ================= ABOUT THE APP ================= -->
+      <section class="about-app">
+        <div class="section-eyebrow">About the App</div>
+        <h2 class="section-title">What You Can Do</h2>
+
+        <div class="features">
+          <div class="feat">
+            <div class="feat-icon"><ion-icon name="grid-outline"></ion-icon></div>
+            <div class="feat-body">
+              <div class="feat-title">Browse Services</div>
+              <p>Explore the full catalog with prices and durations.</p>
+            </div>
+          </div>
+          <div class="feat">
+            <div class="feat-icon"><ion-icon name="calendar-outline"></ion-icon></div>
+            <div class="feat-body">
+              <div class="feat-title">Book Instantly</div>
+              <p>Pick a date, choose a time slot, confirm in seconds.</p>
+            </div>
+          </div>
+          <div class="feat">
+            <div class="feat-icon"><ion-icon name="card-outline"></ion-icon></div>
+            <div class="feat-body">
+              <div class="feat-title">Pay Online or at Clinic</div>
+              <p>Choose to pay when you book, or settle in person.</p>
+            </div>
+          </div>
+          <div class="feat">
+            <div class="feat-icon"><ion-icon name="medical-outline"></ion-icon></div>
+            <div class="feat-body">
+              <div class="feat-title">Treatment History</div>
+              <p>Access notes from your dentist after each visit.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= DEVELOPERS ================= -->
+      <section class="developers-section">
+        <div class="section-eyebrow">The People Behind EAsmile</div>
+        <h2 class="section-title">Our Developers</h2>
+
+        @for (team of devTeams; track team.label) {
+          <div class="dev-team">
+            <div class="dev-team-label">{{ team.label }}</div>
+            <div class="dev-scroll">
+              @for (d of team.members; track d.name) {
+                <div class="dev-card">
+                  <div class="dev-photo">
+                    <div class="photo-fallback">{{ initials(d.name) }}</div>
+                    <img [src]="d.photo" [alt]="d.name" (error)="hideImg($event)" loading="lazy" />
+                  </div>
+                  <div class="dev-name">{{ d.name }}</div>
+                  <div class="dev-role">{{ d.role }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        }
       </section>
 
       <!-- ================= CTA ================= -->
@@ -201,6 +289,15 @@ import {
 
         <p class="cta-foot">© 2024 EAsmile Dental Clinic</p>
       </section>
+
+      <button
+        type="button"
+        class="scroll-top"
+        [class.visible]="showScrollTop()"
+        (click)="scrollToTop()"
+        aria-label="Back to top">
+        <ion-icon name="arrow-up-outline"></ion-icon>
+      </button>
 
     </ion-content>
 
@@ -472,9 +569,11 @@ import {
       background: #f2f8fc;
       position: relative;
       aspect-ratio: 1 / 1;
-      transition: transform 0.25s ease;
+      cursor: pointer;
+      transition: transform 0.2s ease;
     }
     .service-card:hover { transform: translateY(-3px); }
+    .service-card:active { transform: scale(0.98); }
     .service-img {
       position: absolute;
       inset: 0;
@@ -541,40 +640,168 @@ import {
       word-break: break-word;
     }
 
-    /* ============ TEAM ============ */
-    .team-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
+    /* TIMELINE */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      padding-left: 10px;
+      margin-top: 8px;
     }
-    .team-card {
+    .milestone {
+      display: flex;
+      gap: 16px;
+      padding-bottom: 24px;
+      position: relative;
+    }
+    .milestone:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 20px;
+      top: 44px;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, #4EBE7D 0%, #d7f0e0 100%);
+    }
+    .ms-icon {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: #4EBE7D; color: #ffffff;
+      display: grid; place-items: center;
+      font-size: 20px; flex: 0 0 auto;
+      position: relative; z-index: 1;
+      box-shadow: 0 4px 12px rgba(78,190,125,0.3);
+    }
+    .ms-body { flex: 1; padding-top: 6px; }
+    .ms-year {
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      color: #4EBE7D; text-transform: uppercase; margin-bottom: 4px;
+    }
+    .ms-title { font-size: 16px; font-weight: 700; color: #0A1E29; margin-bottom: 6px; }
+    .ms-body p { font-size: 13.5px; color: #4a6272; line-height: 1.55; margin: 0; }
+
+    /* ABOUT THE APP */
+    .features { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+    .feat {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 14px 16px;
       background: #f2f8fc;
-      border-radius: 18px;
-      padding: 16px;
-      text-align: center;
-      transition: transform 0.25s ease;
+      border-radius: 14px;
     }
-    .team-card:hover { transform: translateY(-3px); }
-    .team-photo {
-      width: 72px; height: 72px;
+    .feat-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: #ffffff; color: #4EBE7D;
+      display: grid; place-items: center;
+      font-size: 20px; flex: 0 0 auto;
+    }
+    .feat-body { flex: 1; min-width: 0; }
+    .feat-title { font-size: 14px; font-weight: 700; color: #0A1E29; margin-bottom: 2px; }
+    .feat-body p { font-size: 12.5px; color: #4a6272; line-height: 1.45; margin: 0; }
+
+    .scroll-top {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 300;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
-      margin: 0 auto 10px;
-      background-size: cover;
-      background-position: center;
-      background-color: #d9f0fb;
-      border: 3px solid #ffffff;
-      box-shadow: 0 2px 8px rgba(10,30,41,0.08);
+      border: 0;
+      background: #0A1E29;
+      color: #ffffff;
+      font-size: 22px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 8px 20px rgba(10,30,41,0.25);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px);
+      transition: opacity 0.25s, transform 0.25s;
     }
-    .team-name {
-      font-size: 13px;
+    .scroll-top.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .scroll-top:hover { background: #142635; }
+
+    /* ============ DEVELOPERS ============ */
+    .dev-team { margin-bottom: 28px; }
+    .dev-team:last-child { margin-bottom: 0; }
+
+    .dev-team-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0A1E29;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 12px;
+    }
+
+    .dev-scroll {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      padding: 4px 4px 16px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    .dev-scroll::-webkit-scrollbar { height: 5px; }
+    .dev-scroll::-webkit-scrollbar-thumb {
+      background: #d0dde7;
+      border-radius: 9999px;
+    }
+    .dev-scroll::-webkit-scrollbar-track { background: transparent; }
+
+    .dev-card {
+      flex: 0 0 150px;
+      background: #f2f8fc;
+      border-radius: 16px;
+      padding: 14px 12px;
+      scroll-snap-align: start;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .dev-card:hover { transform: translateY(-3px); }
+
+    .dev-photo {
+      position: relative;
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin: 0 auto 10px;
+      border: 3px solid #ffffff;
+      box-shadow: 0 4px 12px rgba(10,30,41,0.08);
+      background: #d9f0fb;
+    }
+    .photo-fallback {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      font-weight: 800;
+      color: #4EBE7D;
+    }
+    .dev-photo img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .dev-name {
+      font-size: 12.5px;
       font-weight: 700;
       color: #0A1E29;
       line-height: 1.25;
+      margin-bottom: 4px;
     }
-    .team-role {
-      font-size: 11px;
+    .dev-role {
+      font-size: 10.5px;
       color: #7a8a97;
-      margin-top: 3px;
+      line-height: 1.35;
     }
 
     /* ============ CTA ============ */
@@ -641,9 +868,6 @@ import {
 
       .contact-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-      .team-grid { grid-template-columns: repeat(5, 1fr); gap: 16px; }
-      .team-photo { width: 84px; height: 84px; }
-
       .cta { padding: 72px 40px 80px; }
       .cta-title { font-size: 30px; }
     }
@@ -661,10 +885,6 @@ import {
 
       .service-grid { gap: 20px; }
       .service-label { font-size: 16px; }
-
-      .team-grid { gap: 20px; }
-      .team-name { font-size: 14px; }
-      .team-role { font-size: 12px; }
 
       .contact-item { padding: 18px 20px; }
       .contact-value { font-size: 15px; }
@@ -712,29 +932,43 @@ export class OnboardingPage implements OnInit, OnDestroy {
 
   activeSlide = signal(0);
   scrolled = signal(false);
+  showScrollTop = signal(false);
   private slidesLoaded = false;
   hidden = signal(false);
   private slideTimer?: any;
   private lastScrollY = 0;
 
-  services = [
-    { name: 'Check Up',        image: 'https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=600&q=80' },
-    { name: 'Cleaning',        image: 'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=600&q=80' },
-    { name: 'Whitening',       image: 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=600&q=80' },
-    { name: 'Fillings',        image: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=600&q=80' },
-    { name: 'Tooth Extraction',image: 'https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=600&q=80' },
-    { name: 'Orthodontics',    image: 'https://images.unsplash.com/photo-1621452773781-0f992fd1f5cb?w=600&q=80' }
+  services = signal<Service[]>([]);
+
+  devTeams = [
+    {
+      label: 'IT 009 — Section A',
+      members: [
+        { name: 'Duran, Kevin Rio D.',      role: 'Lead Developer / Project Lead', photo: '/developers/kevin-duran.jpg' },
+        { name: 'Marbella, Aelous Matthew', role: 'Lead Frontend Developer',       photo: '/developers/aelous-marbella.jpg' },
+        { name: 'Marrero, John Carlo',      role: 'Backend Developer',             photo: '/developers/john-carlo-marrero.jpg' },
+        { name: 'Reyes, Mariane E.',        role: 'Lead Frontend Designer',        photo: '/developers/mariane-reyes.jpg' },
+        { name: 'Roxas, Ardee',             role: 'Frontend Designer / Developer', photo: '/developers/ardee-roxas.jpg' }
+      ]
+    },
+    {
+      label: 'IT 005 — Section B',
+      members: [
+        { name: 'Duran, Kevin Rio D.',        role: 'Lead Developer / Project Lead',    photo: '/developers/kevin-duran.jpg' },
+        { name: 'Marrero, John Carlo',        role: 'Backend Developer',                photo: '/developers/john-carlo-marrero.jpg' },
+        { name: 'Del Castillo, Gwenverselle', role: 'Technical Writer / QA',            photo: '/developers/gwenverselle-del-castillo.jpg' },
+        { name: 'Menguito, John Harvey',      role: 'Frontend Support / Accessibility', photo: '/developers/john-harvey-menguito.jpg' },
+        { name: 'Palijado, Jennard Joseph',   role: 'Compliance & Legal Pages',         photo: '/developers/jennard-palijado.jpg' },
+        { name: 'Reyes, Mariane E.',          role: 'Lead Frontend Designer',           photo: '/developers/mariane-reyes.jpg' }
+      ]
+    }
   ];
 
-  team = [
-    { name: 'Duran, Kevin Rio',     role: 'Lead Backend Developer',  photo: 'https://ui-avatars.com/api/?name=Kevin+Rio+Duran&background=0A1E29&color=ffffff&bold=true&size=200' },
-    { name: 'Marbella, Aelous M.',  role: 'Lead Frontend Developer', photo: 'https://ui-avatars.com/api/?name=Aelous+Marbella&background=4EBE7D&color=ffffff&bold=true&size=200' },
-    { name: 'Marbero, John Carlo',  role: 'Backend Developer',       photo: 'https://ui-avatars.com/api/?name=John+Carlo&background=93D5ED&color=0A1E29&bold=true&size=200' },
-    { name: 'Reyes, Mariane E.',    role: 'Lead Frontend Designer',  photo: 'https://ui-avatars.com/api/?name=Mariane+Reyes&background=D397F8&color=ffffff&bold=true&size=200' },
-    { name: 'Roxas, Ardee P.',      role: 'Frontend Designer / Dev', photo: 'https://ui-avatars.com/api/?name=Ardee+Roxas&background=F89B67&color=ffffff&bold=true&size=200' }
-  ];
-
-  constructor(private router: Router, private bannersApi: BannersApi) {}
+  constructor(
+    private router: Router,
+    private bannersApi: BannersApi,
+    private servicesApi: ServicesApi
+  ) {}
 
   async ngOnInit() {
     this.slideTimer = setInterval(() => {
@@ -754,6 +988,11 @@ export class OnboardingPage implements OnInit, OnDestroy {
     } catch {
       // keep fallback
     }
+
+    try {
+      await this.servicesApi.load();
+      this.services.set(this.servicesApi.services());
+    } catch { /* leave empty */ }
   }
 
   onContentScroll(ev: CustomEvent) {
@@ -763,6 +1002,7 @@ export class OnboardingPage implements OnInit, OnDestroy {
     const threshold = 60;
 
     this.scrolled.set(y > threshold);
+    this.showScrollTop.set(y > 600);
 
     if (y > threshold && delta > 4) {
       this.hidden.set(true);
@@ -786,6 +1026,36 @@ export class OnboardingPage implements OnInit, OnDestroy {
   scrollToStory() {
     const story = document.querySelector('.story');
     story?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  initials(name: string): string {
+    const parts = name.split(',').map(s => s.trim());
+    const last = parts[0]?.[0] ?? '';
+    const first = parts[1]?.[0] ?? '';
+    return `${first}${last}`.toUpperCase();
+  }
+
+  hideImg(ev: Event) {
+    (ev.target as HTMLImageElement).style.display = 'none';
+  }
+
+  scrollToTop() {
+    const content = document.querySelector('ion-content');
+    if (content) {
+      (content as any).scrollToTop(400);
+    }
+  }
+
+  imageFor(s: Service): string {
+    if (s.image_url) return s.image_url;
+    switch (s.category) {
+      case 'preventive':  return 'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=600&q=80';
+      case 'restorative': return 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=600&q=80';
+      case 'cosmetic':    return 'https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=600&q=80';
+      case 'surgical':    return 'https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=600&q=80';
+      case 'diagnostic':  return 'https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=600&q=80';
+      default:            return 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=600&q=80';
+    }
   }
 
   goLogin() {

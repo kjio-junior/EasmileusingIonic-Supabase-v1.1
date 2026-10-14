@@ -12,7 +12,7 @@ async function login(req, res) {
 
   const { data: user, error } = await supabaseAdmin
     .from('users')
-    .select('id, first_name, last_name, email, password_hash, role, is_active, deleted_at')
+    .select('id, first_name, last_name, email, phone, profile_image, password_hash, role, is_active, deleted_at')
     .eq('email', String(email).toLowerCase().trim())
     .maybeSingle();
 
@@ -83,7 +83,7 @@ async function register(req, res) {
       is_active: true,
       email_verified: false
     })
-    .select('id, first_name, last_name, email, phone, role, is_active')
+    .select('id, first_name, last_name, email, phone, profile_image, role, is_active')
     .single();
 
   if (error) {
@@ -111,7 +111,7 @@ async function adminLogin(req, res) {
 
   const { data: user, error } = await supabaseAdmin
     .from('users')
-    .select('id, first_name, last_name, email, password_hash, role, is_active, deleted_at')
+    .select('id, first_name, last_name, email, phone, profile_image, password_hash, role, is_active, deleted_at')
     .eq('email', String(email).toLowerCase().trim())
     .maybeSingle();
 

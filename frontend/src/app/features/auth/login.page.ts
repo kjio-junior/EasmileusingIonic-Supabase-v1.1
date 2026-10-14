@@ -458,6 +458,7 @@ export class LoginPage {
     this.loading.set(true);
     try {
       await this.auth.login(this.email.trim(), this.password);
+      await this.auth.refreshUser();  // pulls phone + avatar into the cache
 
       const returnUrl = sessionStorage.getItem('returnUrl');
       sessionStorage.removeItem('returnUrl');

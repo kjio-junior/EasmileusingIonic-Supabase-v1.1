@@ -63,15 +63,16 @@ export class AppointmentsApi {
     ).then(r => r.appointment);
   }
 
-  async pay(id: string, card: {
-    card_number: string;
-    card_name: string;
-    expiry: string;
-    cvc: string;
-  }): Promise<{ appointment: Appointment; transaction_id: string }> {
+  async pay(id: string, payload: {
+    payment_method: 'card' | 'gcash' | 'qr' | 'cash';
+    card_number?: string;
+    card_name?: string;
+    expiry?: string;
+    cvc?: string;
+  }): Promise<{ appointment: Appointment; transaction_id: string | null; method: string }> {
     return firstValueFrom(
-      this.http.post<{ appointment: Appointment; transaction_id: string }>(
-        `${environment.apiUrl}/appointments/${id}/pay`, card
+      this.http.post<{ appointment: Appointment; transaction_id: string | null; method: string }>(
+        `${environment.apiUrl}/appointments/${id}/pay`, payload
       )
     );
   }

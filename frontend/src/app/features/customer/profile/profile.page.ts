@@ -242,6 +242,20 @@ export class ProfilePage implements OnInit {
     try {
       const p = await this.api.get();
       this.applyProfile(p);
+
+      // Keep the auth cache in sync whenever we fetch fresh profile data
+      const current = this.auth.user();
+      if (current) {
+        const merged = {
+          ...current,
+          first_name: p.first_name,
+          last_name: p.last_name,
+          phone: p.phone,
+          profile_image: p.profile_image
+        };
+        this.auth.user.set(merged);
+        localStorage.setItem('user', JSON.stringify(merged));
+      }
     } catch {
       this.profile.set(null);
     } finally {
@@ -277,6 +291,20 @@ export class ProfilePage implements OnInit {
     try {
       const updated = await this.api.uploadAvatar(file);
       this.applyProfile(updated);
+
+      const current = this.auth.user();
+      if (current) {
+        const merged = {
+          ...current,
+          first_name: updated.first_name,
+          last_name: updated.last_name,
+          phone: updated.phone,
+          profile_image: updated.profile_image
+        };
+        this.auth.user.set(merged);
+        localStorage.setItem('user', JSON.stringify(merged));
+      }
+
       await this.toast('Photo updated', 'success');
     } catch (e: any) {
       await this.toast(e?.error?.error || 'Upload failed', 'danger');
@@ -300,16 +328,15 @@ export class ProfilePage implements OnInit {
 
       const current = this.auth.user();
       if (current) {
-        this.auth.user.set({
+        const merged = {
           ...current,
           first_name: updated.first_name,
-          last_name: updated.last_name
-        });
-        localStorage.setItem('user', JSON.stringify({
-          ...current,
-          first_name: updated.first_name,
-          last_name: updated.last_name
-        }));
+          last_name: updated.last_name,
+          phone: updated.phone,
+          profile_image: updated.profile_image
+        };
+        this.auth.user.set(merged);
+        localStorage.setItem('user', JSON.stringify(merged));
       }
 
       await this.toast('Profile updated', 'success');

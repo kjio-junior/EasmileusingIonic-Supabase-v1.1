@@ -8,6 +8,8 @@ export interface User {
   first_name: string;
   last_name: string;
   email: string;
+  phone: string | null;
+  profile_image: string | null;
   role: 'admin' | 'dentist' | 'staff' | 'patient' | 'guest';
 }
 
@@ -62,6 +64,19 @@ export class AuthService {
 
   token(): string | null {
     return localStorage.getItem(TOKEN_KEY);
+  }
+
+  async refreshUser(): Promise<void> {
+    if (!this.token()) return;
+    try {
+      const res = await firstValueFrom(
+        this.http.get<{ user: User }>(`${environment.apiUrl}/auth/profile`)
+      );
+      this.user.set(res.user);
+      localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+    } catch {
+      // Silent — if it fails, keep the cached value
+    }
   }
 
   private readUser(): User | null {

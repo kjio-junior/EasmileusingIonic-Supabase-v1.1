@@ -8,6 +8,7 @@ import {
 } from '@ionic/angular/standalone';
 import { ServicesApi, Service } from '../../../core/services.service';
 import { WishlistStore } from '../../../core/wishlist.store';
+import { AuthService } from '../../../core/auth.service';
 
 type SortKey = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc';
 
@@ -27,9 +28,13 @@ type SortKey = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc';
         </ion-buttons>
         <ion-title class="brand">EA<span class="brand-accent">smile</span></ion-title>
         <ion-buttons slot="end">
-          <ion-button routerLink="/app/wishlist">
-            <ion-icon slot="icon-only" name="heart-outline"></ion-icon>
-          </ion-button>
+          @if (auth.token()) {
+            <ion-button routerLink="/app/wishlist">
+              <ion-icon slot="icon-only" name="heart-outline"></ion-icon>
+            </ion-button>
+          } @else {
+            <ion-button routerLink="/login" class="login-chip">Log In</ion-button>
+          }
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -101,6 +106,12 @@ type SortKey = 'name_asc' | 'name_desc' | 'price_asc' | 'price_desc';
     .top-bar { --background: #d9f0fb; --color: #0A1E29; }
     .brand { font-weight: 700; font-size: 20px; letter-spacing: 0.5px; }
     .brand-accent { color: #4EBE7D; }
+    .login-chip {
+      --color: #0A1E29;
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: none;
+    }
     .bg { --background: #ffffff; }
 
     .head { padding: 16px 20px 4px; }
@@ -271,7 +282,11 @@ export class ServicesListPage implements OnInit {
     { label: 'Price ↓',    value: 'price_desc' }
   ];
 
-  constructor(public servicesApi: ServicesApi, public wishlist: WishlistStore) {}
+  constructor(
+    public servicesApi: ServicesApi,
+    public wishlist: WishlistStore,
+    public auth: AuthService
+  ) {}
 
   async ngOnInit() {
     // Always refresh on entry — the shared cache may be stale

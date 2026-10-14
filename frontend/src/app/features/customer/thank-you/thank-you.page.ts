@@ -33,7 +33,11 @@ import { AppointmentsApi, Appointment } from '../../../core/appointments.service
                 <span class="label">Appointment</span>
                 <span class="value">{{ a.appointment_date | date:'MMM d, y · h:mm a' }}</span>
               </div>
-              @if (txnId()) {
+              <div class="summary-row">
+                <span class="label">Payment method</span>
+                <span class="value">{{ methodLabel() }}</span>
+              </div>
+              @if (txnId() && txnId() !== 'null') {
                 <div class="summary-row">
                   <span class="label">Transaction ID</span>
                   <span class="value mono">{{ txnId() }}</span>
@@ -147,6 +151,7 @@ import { AppointmentsApi, Appointment } from '../../../core/appointments.service
 export class ThankYouPage implements OnInit {
   appt = signal<Appointment | null>(null);
   txnId = signal<string>('');
+  method = signal<string>('card');
   loading = signal(true);
 
   constructor(
@@ -157,7 +162,9 @@ export class ThankYouPage implements OnInit {
   async ngOnInit() {
     const apptId = this.route.snapshot.queryParamMap.get('appt') || '';
     const txn = this.route.snapshot.queryParamMap.get('txn') || '';
+    const method = this.route.snapshot.queryParamMap.get('method') || 'card';
     this.txnId.set(txn);
+    this.method.set(method);
 
     if (!apptId) { this.loading.set(false); return; }
 
@@ -168,6 +175,15 @@ export class ThankYouPage implements OnInit {
       this.appt.set(null);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  methodLabel(): string {
+    switch (this.method()) {
+      case 'card':  return 'Card';
+      case 'gcash': return 'GCash';
+      case 'qr':    return 'QR Code';
+      default:      return this.method();
     }
   }
 }

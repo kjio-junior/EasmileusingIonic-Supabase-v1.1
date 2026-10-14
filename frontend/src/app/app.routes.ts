@@ -24,6 +24,26 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register.page').then(m => m.RegisterPage)
   },
   {
+    path: 'services',
+    loadComponent: () => import('./features/customer/services/services-list.page').then(m => m.ServicesListPage)
+  },
+  {
+    path: 'services/:id',
+    loadComponent: () => import('./features/customer/services/service-detail.page').then(m => m.ServiceDetailPage)
+  },
+  {
+    path: 'history',
+    loadComponent: () => import('./features/customer/history/history.page').then(m => m.HistoryPage)
+  },
+  {
+    path: 'about',
+    loadComponent: () => import('./features/customer/about/about.page').then(m => m.AboutPage)
+  },
+  {
+    path: 'contact',
+    loadComponent: () => import('./features/customer/contact/contact.page').then(m => m.ContactPage)
+  },
+  {
     path: 'forgot-password',
     canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/forgot-password.page').then(m => m.ForgotPasswordPage)

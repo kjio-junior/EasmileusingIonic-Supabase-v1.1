@@ -111,26 +111,33 @@ async function busySlots(req, res) {
 
 async function payAppointment(req, res) {
   const { id } = req.params;
-  const { card_number, card_name, expiry, cvc } = req.body || {};
+  const { payment_method, card_number, card_name, expiry, cvc } = req.body || {};
 
-  if (!card_number || !card_name || !expiry || !cvc) {
-    return res.status(400).json({ error: 'All card fields are required' });
+  const method = payment_method || 'card';
+  const validMethods = ['card', 'gcash', 'qr', 'cash'];
+  if (!validMethods.includes(method)) {
+    return res.status(400).json({ error: 'Invalid payment method' });
   }
 
-  // Superficial validation — this is a simulation, not a real charge
-  const digits = String(card_number).replace(/\s+/g, '');
-  if (!/^\d{13,19}$/.test(digits)) {
-    return res.status(400).json({ error: 'Invalid card number' });
-  }
-  if (!/^\d{2}\/\d{2}$/.test(expiry)) {
-    return res.status(400).json({ error: 'Expiry must be in MM/YY format' });
-  }
-  const [mm] = expiry.split('/').map(Number);
-  if (mm < 1 || mm > 12) {
-    return res.status(400).json({ error: 'Invalid expiry month' });
-  }
-  if (!/^\d{3,4}$/.test(cvc)) {
-    return res.status(400).json({ error: 'Invalid CVC' });
+  // Card requires full card fields
+  if (method === 'card') {
+    if (!card_number || !card_name || !expiry || !cvc) {
+      return res.status(400).json({ error: 'All card fields are required' });
+    }
+    const digits = String(card_number).replace(/\s+/g, '');
+    if (!/^\d{13,19}$/.test(digits)) {
+      return res.status(400).json({ error: 'Invalid card number' });
+    }
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+      return res.status(400).json({ error: 'Expiry must be in MM/YY format' });
+    }
+    const [mm] = expiry.split('/').map(Number);
+    if (mm < 1 || mm > 12) {
+      return res.status(400).json({ error: 'Invalid expiry month' });
+    }
+    if (!/^\d{3,4}$/.test(cvc)) {
+      return res.status(400).json({ error: 'Invalid CVC' });
+    }
   }
 
   // Load appointment and verify ownership
@@ -154,20 +161,27 @@ async function payAppointment(req, res) {
     return res.status(400).json({ error: 'This appointment is already paid' });
   }
 
+  // Simulate processing delay
   await new Promise(r => setTimeout(r, 900));
 
+  // Generate a fake transaction ID with a method-specific prefix
+  const prefix = { card: 'CARD', gcash: 'GC', qr: 'QR', cash: 'CASH' }[method];
   const txId =
-    'TXN-' +
+    prefix +
+    '-' +
     Date.now().toString(36).toUpperCase() +
     '-' +
     Math.random().toString(36).slice(2, 6).toUpperCase();
 
+  // Cash at clinic does NOT mark the appointment as paid
+  const nextPaymentStatus = method === 'cash' ? 'unpaid' : 'paid';
+
   const { data: updated, error: updateErr } = await supabaseAdmin
     .from('appointments')
     .update({
-      payment_status: 'paid',
-      payment_method: 'card',
-      transaction_id: txId,
+      payment_status: nextPaymentStatus,
+      payment_method: method,
+      transaction_id: method === 'cash' ? null : txId,
       updated_at: new Date().toISOString()
     })
     .eq('id', id)
@@ -184,22 +198,31 @@ async function payAppointment(req, res) {
     return res.status(500).json({ error: 'Server error' });
   }
 
-  await notify({
-    userId: req.user.sub,
-    type: 'status',
-    title: 'Payment received',
-    message: `We received your payment of ₱${Number(appt.total_amount).toFixed(2)}. Transaction ID: ${txId}.`,
-    link: '/app/appointments'
-  });
+  // Notifications — only for actual payments, not cash-at-clinic
+  if (method !== 'cash') {
+    const methodLabel = { card: 'card', gcash: 'GCash', qr: 'QR code' }[method] || method;
 
-  await notifyClinic({
-    type: 'status',
-    title: 'Payment received',
-    message: `A patient paid ₱${Number(appt.total_amount).toFixed(2)} for an appointment on ${new Date(appt.appointment_date).toLocaleString('en-PH')}.`,
-    link: '/ea-admin/appointments'
-  });
+    await notify({
+      userId: req.user.sub,
+      type: 'status',
+      title: 'Payment received',
+      message: `We received your ${methodLabel} payment of ₱${Number(appt.total_amount).toFixed(2)}. Transaction ID: ${txId}.`,
+      link: '/app/appointments'
+    });
 
-  res.json({ appointment: updated, transaction_id: txId });
+    await notifyClinic({
+      type: 'status',
+      title: 'Payment received',
+      message: `A patient paid ₱${Number(appt.total_amount).toFixed(2)} via ${methodLabel} for an appointment on ${new Date(appt.appointment_date).toLocaleString('en-PH')}.`,
+      link: '/ea-admin/appointments'
+    });
+  }
+
+  res.json({
+    appointment: updated,
+    transaction_id: method === 'cash' ? null : txId,
+    method
+  });
 }
 
 async function getOne(req, res) {

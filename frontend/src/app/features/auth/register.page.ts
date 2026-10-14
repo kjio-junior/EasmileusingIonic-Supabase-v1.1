@@ -543,6 +543,7 @@ export class RegisterPage {
         phone: this.phone.trim(),
         password: this.password
       });
+      await this.auth.refreshUser();
       this.router.navigateByUrl('/app/home', { replaceUrl: true });
     } catch (e: any) {
       this.error.set(e?.error?.error || e?.message || 'Registration failed');
