@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { BannersApi, Banner } from '../../core/banners.service';
@@ -896,6 +896,8 @@ import {
   `]
 })
 export class OnboardingPage implements OnInit, OnDestroy {
+  @ViewChild(IonContent) content!: IonContent;
+
   private readonly FALLBACK_BANNERS: Banner[] = [
     {
       id: 'fallback-1', title: 'Take Care of', subtitle: 'Your Smile',
@@ -1024,8 +1026,10 @@ export class OnboardingPage implements OnInit, OnDestroy {
   }
 
   scrollToStory() {
-    const story = document.querySelector('.story');
-    story?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const story = document.querySelector('.story') as HTMLElement | null;
+    if (!story || !this.content) return;
+    // Use ion-content's own scroll methods
+    this.content.scrollToPoint(0, story.offsetTop - 20, 400);
   }
 
   initials(name: string): string {
@@ -1040,10 +1044,7 @@ export class OnboardingPage implements OnInit, OnDestroy {
   }
 
   scrollToTop() {
-    const content = document.querySelector('ion-content');
-    if (content) {
-      (content as any).scrollToTop(400);
-    }
+    this.content?.scrollToTop(400);
   }
 
   imageFor(s: Service): string {
