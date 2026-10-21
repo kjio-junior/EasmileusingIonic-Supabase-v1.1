@@ -8,6 +8,7 @@ export interface User {
   first_name: string;
   last_name: string;
   email: string;
+  email_verified?: boolean;
   phone: string | null;
   profile_image: string | null;
   role: 'admin' | 'dentist' | 'staff' | 'patient' | 'guest';

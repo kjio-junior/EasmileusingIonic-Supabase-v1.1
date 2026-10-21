@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 import { guestGuard } from './core/guest.guard';
 import { adminGuard, adminGuestGuard } from './core/admin.guard';
+import { verifiedGuard } from './core/verified.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'splash' },
@@ -40,6 +41,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/customer/about/about.page').then(m => m.AboutPage)
   },
   {
+    path: 'terms',
+    loadComponent: () => import('./features/legal/terms.page').then(m => m.TermsPage)
+  },
+  {
+    path: 'privacy',
+    loadComponent: () => import('./features/legal/privacy.page').then(m => m.PrivacyPage)
+  },
+  {
     path: 'contact',
     loadComponent: () => import('./features/customer/contact/contact.page').then(m => m.ContactPage)
   },
@@ -51,6 +60,11 @@ export const routes: Routes = [
   {
     path: 'reset-password',
     loadComponent: () => import('./features/auth/reset-password.page').then(m => m.ResetPasswordPage)
+  },
+  {
+    path: 'verify-email',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/auth/verify-email.page').then(m => m.VerifyEmailPage)
   },
   {
     path: 'ea-admin',
@@ -89,7 +103,7 @@ export const routes: Routes = [
   },
   {
     path: 'app',
-    canActivate: [authGuard],
+    canActivate: [authGuard, verifiedGuard],
     loadComponent: () => import('./features/customer/customer-tabs.component').then(m => m.CustomerTabsComponent),
     children: [
       { path: '', redirectTo: 'home', pathMatch: 'full' },

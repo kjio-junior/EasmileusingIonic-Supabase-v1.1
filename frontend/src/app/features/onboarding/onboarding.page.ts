@@ -288,6 +288,11 @@ import {
         </ion-button>
 
         <p class="cta-foot">© 2024 EAsmile Dental Clinic</p>
+        <div class="legal-footer">
+          <a routerLink="/terms">Terms &amp; Conditions</a>
+          <span>•</span>
+          <a routerLink="/privacy">Privacy Policy</a>
+        </div>
       </section>
 
       <button
@@ -850,6 +855,12 @@ import {
       color: #7a8a97;
       margin: 22px 0 0;
     }
+    .legal-footer {
+      display: flex; justify-content: center; gap: 12px;
+      margin-top: 24px; font-size: 12px;
+    }
+    .legal-footer a { color: #7a8a97; text-decoration: none; }
+    .legal-footer a:hover { color: #0A1E29; text-decoration: underline; }
 
     /* ============================================
        DESKTOP BREAKPOINTS

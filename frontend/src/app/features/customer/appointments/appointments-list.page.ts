@@ -7,7 +7,7 @@ import {
   IonContent, IonSpinner, IonRefresher, IonRefresherContent,
   IonSegment, IonSegmentButton, IonLabel,
   IonModal, IonTextarea, IonItem,
-  ToastController
+  AlertController, ToastController
 } from '@ionic/angular/standalone';
 import { AppointmentsApi, Appointment } from '../../../core/appointments.service';
 import { ReviewsApi, Review } from '../../../core/reviews.service';
@@ -142,6 +142,25 @@ import { ReviewsApi, Review } from '../../../core/reviews.service';
                 <div class="paid-tag">
                   <ion-icon name="checkmark-circle"></ion-icon>
                   <span>Paid</span>
+                </div>
+              }
+
+              @if (tab() === 'upcoming' && (a.status === 'pending' || a.status === 'confirmed')) {
+                <div class="reschedule-cta">
+                  @if ((a.reschedule_count ?? 0) >= 2) {
+                    <span class="resched-limit">
+                      You've used both reschedules. <a routerLink="/app/contact">Contact the clinic</a> if you need help.
+                    </span>
+                  } @else if (!canSelfReschedule(a)) {
+                    <span class="resched-limit">
+                      Less than 24 hours away. For urgent changes, <a routerLink="/app/contact">contact the clinic</a>.
+                    </span>
+                  } @else {
+                    <button class="resched-btn" (click)="openReschedule(a)">
+                      <ion-icon name="calendar-outline"></ion-icon>
+                      Reschedule
+                    </button>
+                  }
                 </div>
               }
 
@@ -337,6 +356,16 @@ import { ReviewsApi, Review } from '../../../core/reviews.service';
     }
     .paid-tag ion-icon { font-size: 16px; }
 
+    .reschedule-cta { margin-top: 12px; display: flex; justify-content: flex-end; }
+    .resched-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: transparent; border: 1px solid #0A1E29; color: #0A1E29;
+      padding: 8px 16px; border-radius: 9999px; font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .resched-btn:hover { background: #f2f8fc; }
+    .resched-limit { font-size: 11px; color: #c0392b; font-weight: 600; }
+    .resched-limit a { color: #4EBE7D; text-decoration: underline; }
+
     .review-cta { margin-top: 12px; }
     .review-btn {
       display: inline-flex; align-items: center; gap: 6px;
@@ -454,6 +483,7 @@ export class AppointmentsListPage implements OnInit {
   constructor(
     private api: AppointmentsApi,
     private reviewsApi: ReviewsApi,
+    private alertCtrl: AlertController,
     private toastCtrl: ToastController
   ) {}
 
@@ -501,6 +531,51 @@ export class AppointmentsListPage implements OnInit {
   async refresh(ev: CustomEvent) {
     await this.load();
     (ev.target as HTMLIonRefresherElement).complete();
+  }
+
+  canSelfReschedule(a: Appointment): boolean {
+    return new Date(a.appointment_date).getTime() - Date.now() >= 24 * 60 * 60 * 1000;
+  }
+
+  async openReschedule(a: Appointment) {
+    const left = 2 - (a.reschedule_count ?? 0);
+
+    const alert = await this.alertCtrl.create({
+      header: 'Reschedule appointment',
+      message: `Pick a new date for your visit. You have ${left} reschedule${left === 1 ? '' : 's'} left for this appointment.`,
+      inputs: [
+        {
+          name: 'date',
+          type: 'date',
+          min: new Date().toISOString().split('T')[0]
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Save', role: 'confirm' }
+      ]
+    });
+    await alert.present();
+    const result = await alert.onDidDismiss();
+    if (result.role !== 'confirm' || !result.data?.values?.date) return;
+
+    const dateStr = result.data.values.date;
+    try {
+      const isoDate = new Date(`${dateStr}T09:00:00`).toISOString();
+      await this.api.reschedule(a.id, isoDate);
+
+      const t = await this.toastCtrl.create({
+        message: 'Rescheduled successfully', duration: 2000, color: 'success'
+      });
+      await t.present();
+
+      await this.load();
+    } catch (e: any) {
+      const t = await this.toastCtrl.create({
+        message: e.error?.error || 'Failed to reschedule', duration: 2500, color: 'danger'
+      });
+      await t.present();
+    }
   }
 
   onTabChange(ev: CustomEvent) {

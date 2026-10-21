@@ -22,7 +22,7 @@ import {
   banOutline, createOutline, addOutline, trashOutline, closeOutline,
   trendingUpOutline, arrowUpOutline, arrowDownOutline, arrowBackOutline, arrowForwardOutline, lockClosedOutline,
   lockOpenOutline, keyOutline, cardOutline, checkmark, checkmarkCircle,
-  flagOutline, mailOutline, callOutline,
+  flagOutline, mailOutline, callOutline, shieldCheckmarkOutline,
   locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline,
   imagesOutline, linkOutline, notificationsOutline, notificationsOffOutline, pricetagOutline, chatbubbleOutline,
   bulbOutline, phonePortraitOutline, ribbonOutline, qrCodeOutline, storefrontOutline
@@ -99,6 +99,14 @@ import { LocalStorageNoticeComponent } from './shared/local-storage-notice.compo
               <ion-item routerLink="/developers" routerLinkActive="menu-active" detail="false">
                 <ion-icon slot="start" name="people-outline"></ion-icon>
                 <ion-label>Developers</ion-label>
+              </ion-item>
+              <ion-item routerLink="/terms" routerLinkActive="menu-active" detail="false">
+                <ion-icon slot="start" name="document-text-outline"></ion-icon>
+                <ion-label>Terms &amp; Conditions</ion-label>
+              </ion-item>
+              <ion-item routerLink="/privacy" routerLinkActive="menu-active" detail="false">
+                <ion-icon slot="start" name="shield-checkmark-outline"></ion-icon>
+                <ion-label>Privacy Policy</ion-label>
               </ion-item>
               <ion-item (click)="logout()" detail="false" button>
                 <ion-icon slot="start" name="log-out-outline"></ion-icon>
@@ -231,7 +239,7 @@ export class App {
       banOutline, createOutline, addOutline, trashOutline, closeOutline,
       trendingUpOutline, arrowUpOutline, arrowDownOutline, arrowBackOutline, arrowForwardOutline, lockClosedOutline,
       lockOpenOutline, keyOutline, cardOutline, checkmark,
-      flagOutline, mailOutline, callOutline,
+      flagOutline, mailOutline, callOutline, shieldCheckmarkOutline,
       locationOutline, logoInstagram, documentTextOutline, starOutline, star, chatbubblesOutline,
       imagesOutline, linkOutline, notificationsOutline, notificationsOffOutline, pricetagOutline, chatbubbleOutline,
       bulbOutline, phonePortraitOutline, ribbonOutline, qrCodeOutline, storefrontOutline

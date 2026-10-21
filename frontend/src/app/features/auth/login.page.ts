@@ -457,7 +457,13 @@ export class LoginPage {
     }
     this.loading.set(true);
     try {
-      await this.auth.login(this.email.trim(), this.password);
+      const user = await this.auth.login(this.email.trim(), this.password);
+
+      if (user.role === 'patient' && user.email_verified === false) {
+        this.router.navigateByUrl('/verify-email', { replaceUrl: true });
+        return;
+      }
+
       await this.auth.refreshUser();  // pulls phone + avatar into the cache
 
       const returnUrl = sessionStorage.getItem('returnUrl');

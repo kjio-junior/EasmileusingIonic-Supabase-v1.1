@@ -255,4 +255,54 @@ async function getOne(req, res) {
   res.json({ appointment: data });
 }
 
-module.exports = { myAppointments, book, busySlots, payAppointment, getOne };
+async function reschedule(req, res) {
+  const { id } = req.params;
+  const { new_date } = req.body || {};
+
+  if (!new_date) return res.status(400).json({ error: 'New date required' });
+
+  const newDate = new Date(new_date);
+  if (isNaN(newDate.getTime()) || newDate.getTime() < Date.now()) {
+    return res.status(400).json({ error: 'Invalid or past date' });
+  }
+
+  const { data: appt, error } = await supabaseAdmin
+    .from('appointments')
+    .select('id, patient_id, appointment_date, status, reschedule_count, deleted_at')
+    .eq('id', id)
+    .single();
+
+  if (error || !appt || appt.deleted_at) return res.status(404).json({ error: 'Appointment not found' });
+  if (appt.patient_id !== req.user.sub) return res.status(403).json({ error: 'Forbidden' });
+
+  if (!['pending', 'confirmed'].includes(appt.status)) {
+    return res.status(400).json({ error: 'Cannot reschedule a ' + appt.status + ' appointment' });
+  }
+
+  // 24-hour rule
+  const hoursUntil = (new Date(appt.appointment_date).getTime() - Date.now()) / (1000 * 60 * 60);
+  if (hoursUntil < 24) {
+    return res.status(400).json({ error: 'This appointment is less than 24 hours away. Please contact the clinic to reschedule.' });
+  }
+
+  if (appt.reschedule_count >= 2) {
+    return res.status(400).json({ error: "You've used both reschedules for this appointment. Please contact the clinic to reschedule." });
+  }
+
+  const { data: updated, error: updateErr } = await supabaseAdmin
+    .from('appointments')
+    .update({
+      appointment_date: newDate.toISOString(),
+      reschedule_count: appt.reschedule_count + 1,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (updateErr) return res.status(500).json({ error: 'Server error' });
+
+  res.json({ appointment: updated });
+}
+
+module.exports = { myAppointments, book, busySlots, payAppointment, getOne, reschedule };

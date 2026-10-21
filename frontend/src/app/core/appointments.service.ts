@@ -20,6 +20,7 @@ export interface Appointment {
   transaction_id: string | null;
   payment_status: string;
   created_at: string;
+  reschedule_count?: number;
   dentist: { id: string; first_name: string; last_name: string } | null;
   items: AppointmentItem[];
 }
@@ -75,5 +76,11 @@ export class AppointmentsApi {
         `${environment.apiUrl}/appointments/${id}/pay`, payload
       )
     );
+  }
+
+  async reschedule(id: string, new_date: string): Promise<Appointment> {
+    return firstValueFrom(
+      this.http.put<{ appointment: Appointment }>(`${environment.apiUrl}/appointments/${id}/reschedule`, { new_date })
+    ).then(r => r.appointment);
   }
 }

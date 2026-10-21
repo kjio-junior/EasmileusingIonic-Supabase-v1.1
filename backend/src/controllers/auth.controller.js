@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { supabaseAdmin } = require('../config/supabase');
 const { signAccess, signRefresh } = require('../utils/jwt');
-const { sendPasswordResetEmail } = require('../utils/email');
+const { sendPasswordResetEmail, sendVerificationEmail } = require('../utils/email');
 
 async function login(req, res) {
   const { email, password } = req.body || {};
@@ -12,7 +12,7 @@ async function login(req, res) {
 
   const { data: user, error } = await supabaseAdmin
     .from('users')
-    .select('id, first_name, last_name, email, phone, profile_image, password_hash, role, is_active, deleted_at')
+    .select('id, first_name, last_name, email, phone, profile_image, password_hash, role, is_active, deleted_at, email_verified')
     .eq('email', String(email).toLowerCase().trim())
     .maybeSingle();
 
@@ -28,6 +28,17 @@ async function login(req, res) {
 
   const ok = await bcrypt.compare(password, user.password_hash);
   if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+
+  // Unverified patient: send a fresh code and let the frontend route to the verify screen
+  if (user.role === 'patient' && !user.email_verified) {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    await supabaseAdmin.from('users').update({
+      verification_code: code,
+      verification_expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+    }).eq('id', user.id);
+    try { await sendVerificationEmail(user.email, user.first_name, code); }
+    catch (err) { console.error('Failed to send verification email:', err); }
+  }
 
   const payload = { sub: user.id, role: user.role, email: user.email };
   const accessToken = signAccess(payload);
@@ -61,34 +72,49 @@ async function register(req, res) {
   // Check for existing user
   const { data: existing } = await supabaseAdmin
     .from('users')
-    .select('id')
+    .select('id, role, email_verified, deleted_at')
     .eq('email', cleanEmail)
     .maybeSingle();
 
-  if (existing) {
+  // Only an unverified patient leftover can be taken over. Verified accounts,
+  // deleted accounts, and staff/admin accounts stay blocked.
+  const reusable = existing && !existing.email_verified && !existing.deleted_at && existing.role === 'patient';
+  if (existing && !reusable) {
     return res.status(409).json({ error: 'Email already registered' });
   }
 
   const hash = await bcrypt.hash(password, 10);
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-  const { data: user, error } = await supabaseAdmin
-    .from('users')
-    .insert({
-      first_name: first_name.trim(),
-      last_name: last_name.trim(),
-      email: cleanEmail,
-      phone: phone.trim(),
-      password_hash: hash,
-      role: 'patient',
-      is_active: true,
-      email_verified: false
-    })
-    .select('id, first_name, last_name, email, phone, profile_image, role, is_active')
-    .single();
+  const fields = {
+    first_name: first_name.trim(),
+    last_name: last_name.trim(),
+    phone: phone.trim(),
+    password_hash: hash,
+    verification_code: code,
+    verification_expires_at: expiresAt,
+    updated_at: new Date().toISOString()
+  };
+  const cols = 'id, first_name, last_name, email, phone, role, is_active, email_verified';
+
+  const query = reusable
+    ? supabaseAdmin.from('users').update(fields).eq('id', existing.id)
+    : supabaseAdmin.from('users').insert({
+        ...fields, email: cleanEmail, role: 'patient', is_active: true, email_verified: false
+      });
+
+  const { data: user, error } = await query.select(cols).single();
 
   if (error) {
     console.error('register error', error);
     return res.status(500).json({ error: 'Server error' });
+  }
+
+  try {
+    await sendVerificationEmail(user.email, user.first_name, code);
+  } catch (err) {
+    console.error('Failed to send verification email:', err);
   }
 
   const payload = { sub: user.id, role: user.role, email: user.email };
@@ -313,8 +339,76 @@ async function resetPassword(req, res) {
   res.json({ message: 'Password updated successfully' });
 }
 
+async function verifyEmail(req, res) {
+  const { code } = req.body || {};
+  const userId = req.user.sub;
+
+  if (!code) return res.status(400).json({ error: 'Code is required' });
+
+  const { data: user, error } = await supabaseAdmin
+    .from('users')
+    .select('id, verification_code, verification_expires_at, email_verified')
+    .eq('id', userId)
+    .single();
+
+  if (error || !user) return res.status(404).json({ error: 'User not found' });
+  if (user.email_verified) return res.json({ ok: true, message: 'Already verified' });
+
+  if (user.verification_code !== code) {
+    return res.status(400).json({ error: 'Invalid code' });
+  }
+
+  if (new Date(user.verification_expires_at) < new Date()) {
+    return res.status(400).json({ error: 'Code expired. Please request a new one.' });
+  }
+
+  const { error: updateErr } = await supabaseAdmin
+    .from('users')
+    .update({
+      email_verified: true,
+      verification_code: null,
+      verification_expires_at: null
+    })
+    .eq('id', userId);
+
+  if (updateErr) return res.status(500).json({ error: 'Server error' });
+
+  res.json({ ok: true, message: 'Email verified successfully' });
+}
+
+async function resendVerification(req, res) {
+  const { data: user } = await supabaseAdmin
+    .from('users')
+    .select('id, first_name, email, email_verified, verification_expires_at')
+    .eq('id', req.user.sub)
+    .maybeSingle();
+
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  if (user.email_verified) return res.json({ ok: true, message: 'Already verified' });
+
+  // 60-second cooldown (code was issued at expires_at minus 15 min)
+  const issuedAt = user.verification_expires_at
+    ? new Date(user.verification_expires_at).getTime() - 15 * 60 * 1000 : 0;
+  const elapsed = Date.now() - issuedAt;
+  if (elapsed < 60 * 1000) {
+    const wait = Math.ceil((60 * 1000 - elapsed) / 1000);
+    return res.status(429).json({ error: `Please wait ${wait}s before requesting another code`, retry_after: wait });
+  }
+
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  await supabaseAdmin.from('users').update({
+    verification_code: code,
+    verification_expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+  }).eq('id', user.id);
+
+  try { await sendVerificationEmail(user.email, user.first_name, code); }
+  catch (err) { return res.status(500).json({ error: 'Could not send email' }); }
+
+  res.json({ ok: true, retry_after: 60 });
+}
+
 module.exports = {
-  login, register, adminLogin,
+  login, register, adminLogin, verifyEmail,
   getProfile, updateProfile, uploadAvatar,
-  forgotPassword, resetPassword
+  forgotPassword, resetPassword, resendVerification
 };

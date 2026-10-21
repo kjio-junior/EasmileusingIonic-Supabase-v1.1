@@ -193,6 +193,21 @@ import { AuthService } from '../../core/auth.service';
               </div>
             }
 
+            <!-- Checkbox -->
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="agreeToTerms"
+                  (change)="markTouched('agreeToTerms')" 
+                />
+                <span>I agree to the <a routerLink="/terms" target="_blank">Terms &amp; Conditions</a> and <a routerLink="/privacy" target="_blank">Data Privacy Policy</a>.</span>
+              </label>
+              @if (showError('agreeToTerms')) {
+                <p class="field-err">{{ fieldErrors()['agreeToTerms'] }}</p>
+              }
+            </div>
+
             <ion-button expand="block" class="submit" (click)="submit()" [disabled]="loading()">
               @if (loading()) {
                 <ion-spinner name="crescent"></ion-spinner>
@@ -300,6 +315,18 @@ import { AuthService } from '../../core/auth.service';
     .field-err { color: #c0392b; font-size: 12px; margin: 6px 4px 0; font-weight: 600; }
     .field-hint { color: #7a8a97; font-size: 12px; margin: 6px 4px 0; }
 
+    .checkbox-group { margin: 16px 0; }
+    .checkbox-label {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 13px; color: #4a6272; cursor: pointer;
+    }
+    .checkbox-label input {
+      margin-top: 3px; width: 16px; height: 16px;
+      accent-color: #4EBE7D;
+    }
+    .checkbox-label a { color: #4EBE7D; font-weight: 600; text-decoration: none; }
+    .checkbox-label a:hover { text-decoration: underline; }
+
     .err-box {
       display: flex; align-items: center; gap: 10px;
       padding: 12px 14px; background: #ffe0e0;
@@ -355,6 +382,7 @@ export class RegisterPage {
   password = '';
   confirmPassword = '';
   showPassword = false;
+  agreeToTerms = false;
 
   loading = signal(false);
   submitted = signal(false);
@@ -442,6 +470,10 @@ export class RegisterPage {
       errors['confirmPassword'] = 'Passwords do not match';
     }
 
+    if (!this.agreeToTerms) {
+      errors['agreeToTerms'] = 'You must agree to the Terms and Privacy Policy';
+    }
+
     return errors;
   }
 
@@ -470,7 +502,8 @@ export class RegisterPage {
         password: this.password
       });
       await this.auth.refreshUser();
-      this.router.navigateByUrl('/app/home', { replaceUrl: true });
+      // Send to verification instead of home
+      this.router.navigateByUrl('/verify-email', { replaceUrl: true });
     } catch (e: any) {
       this.error.set(e?.error?.error || e?.message || 'Registration failed');
     } finally {

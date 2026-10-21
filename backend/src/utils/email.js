@@ -43,4 +43,25 @@ async function sendPasswordResetEmail(to, name, resetUrl) {
   }
 }
 
-module.exports = { sendPasswordResetEmail };
+async function sendVerificationEmail(to, name, code) {
+  const msg = {
+    to,
+    from: FROM,
+    subject: 'Verify your EAsmile account',
+    html: `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #0A1E29;">
+        <h2 style="color: #0A1E29; margin: 0 0 8px;">Welcome, ${name}!</h2>
+        <p style="font-size: 15px; line-height: 1.5; color: #4a6272;">
+          Thanks for joining EAsmile. Use the code below to verify your email address and activate your account.
+        </p>
+        <div style="background: #f2f8fc; padding: 20px; border-radius: 12px; text-align: center; margin: 24px 0;">
+          <span style="font-size: 32px; font-weight: 800; letter-spacing: 4px; color: #0A1E29;">${code}</span>
+        </div>
+        <p style="font-size: 13px; color: #7a8a97;">This code expires in 15 minutes.</p>
+      </div>
+    `
+  };
+  await sgMail.send(msg);
+}
+
+module.exports = { sendPasswordResetEmail, sendVerificationEmail };
