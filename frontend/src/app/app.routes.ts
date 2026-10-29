@@ -49,6 +49,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/legal/privacy.page').then(m => m.PrivacyPage)
   },
   {
+    path: 'developers',
+    loadComponent: () => import('./features/developers/developers.page').then(m => m.DevelopersPage)
+  },
+  {
     path: 'contact',
     loadComponent: () => import('./features/customer/contact/contact.page').then(m => m.ContactPage)
   },

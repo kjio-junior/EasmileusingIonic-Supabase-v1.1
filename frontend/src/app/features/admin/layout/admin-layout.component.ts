@@ -307,6 +307,7 @@ interface NavItem {
     .main {
       flex: 1; min-width: 0; min-height: 100vh;
       display: flex; flex-direction: column; position: relative;
+      padding-bottom: 80px;
     }
     .mobile-header {
       height: 60px; display: flex; align-items: center; gap: 14px;
@@ -349,7 +350,7 @@ interface NavItem {
     /* FLOATING BELL */
     .bell-fab {
       position: fixed;
-      top: 24px;
+      bottom: 24px;
       right: 32px;
       z-index: 500;
       width: 52px;
@@ -601,7 +602,7 @@ interface NavItem {
         width: auto; max-width: none; max-height: none;
         border-radius: 16px;
       }
-      .bell-fab { top: 12px; right: 12px; width: 46px; height: 46px; font-size: 22px; }
+      .bell-fab { bottom: 12px; right: 12px; width: 46px; height: 46px; font-size: 22px; }
     }
   `]
 })
